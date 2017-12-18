@@ -1,0 +1,16 @@
+!.gitkeep
+__pycache__/
+*.py[cod]
+*$py.class
+
+tmp/
+env/
+migrations/
+db_repository/
+
+*.db
+
+*.sublime*
+.vscode/
+.idea/
+uploads/*/*
