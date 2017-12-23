@@ -8,8 +8,8 @@ import logging
 from telegram.ext import Updater, CommandHandler
 
 from config import BOT_AUTH_TOKEN
-from wrappers import restricted
-from commands import init_commands
+from wrappers import admin_only
+from poll import init_handlers
 
 
 def main():
@@ -23,13 +23,13 @@ def main():
         updater.stop()
         os.execl(sys.executable, sys.executable, *sys.argv)
 
-    @restricted
+    @admin_only
     def restart(bot, update):
         update.message.reply_text('Bot is restarting...')
         Thread(target=stop_and_restart).start()
 
     updater.dispatcher.add_handler(CommandHandler('restart', restart))
-    init_commands(updater.dispatcher)
+    init_handlers(updater.dispatcher)
 
     updater.start_polling()
     updater.idle()

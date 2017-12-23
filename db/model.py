@@ -8,7 +8,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
-from config import POLL_CODE_LENGTH, SQLALCHEMY_DATABASE_URI, WAIT_QUESTION, VISIBLE_AFTER_ANSWER, POLL_OPEN
+from config import SQLALCHEMY_DATABASE_URI
+from config import POLL_CODE_LENGTH, WAIT_QUESTION, VISIBLE_AFTER_ANSWER, POLL_OPEN
 
 
 engine = create_engine(SQLALCHEMY_DATABASE_URI)
@@ -32,8 +33,8 @@ class Poll(Base):
     result_visible = Column(Integer, default=VISIBLE_AFTER_ANSWER)
     can_change_answer = Column(Boolean, default=True)
 
-    author_id = Column(Integer, ForeignKey('user.id'))
-    author = relationship(User, backref='polls')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User, backref='polls')
 
 
 class Choice(Base):
@@ -56,3 +57,5 @@ class Result(Base):
     poll = relationship(Poll, backref='results')
     choice_id = Column(Integer, ForeignKey('choice.id'))
     choice = relationship(Choice, backref='results')
+
+Base.metadata.create_all(engine)

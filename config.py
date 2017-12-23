@@ -2,15 +2,14 @@
 
 # Next Vote Bot
 BOT_AUTH_TOKEN = '471075290:AAGv-38b1tRzTE7J3VLfkluOskbqu0tG5h4'
-
-# My Little Spam Bot
-# BOT_AUTH_TOKEN = '373715611:AAHy2yU-MlaIA0jaxMay8g1oif0_vvGBwKQ'
+BOT_NAME = 'NextVoteBot'
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
 
 LIST_OF_ADMINS = [131031814]
 
-POLL_CODE_LENGTH = 6
+POLL_CODE_LENGTH = 7
+INLINE_SEARCH_RESULTS = 5
 
 # Current chat states
 WAIT_QUESTION = 0
@@ -26,3 +25,4 @@ POLL_DELETED = 2
 VISIBLE_NEVER = 0
 VISIBLE_AFTER_ANSWER = 1
 VISIBLE_ALWAYS = 2
+VISIBLE_TEXT = ['never', 'after answer', 'always']

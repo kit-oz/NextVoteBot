@@ -5,7 +5,7 @@ from functools import wraps
 from config import LIST_OF_ADMINS
 
 
-def restricted(func):
+def admin_only(func):
     @wraps(func)
     def wrapped(bot, update, *args, **kwargs):
         user_id = update.effective_user.id
