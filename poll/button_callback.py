@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
 
-from db.middleware import db
+from telegram import ParseMode
+from db import db
 from config import POLL_OPEN, POLL_CLOSED, POLL_DELETED
 from .buttons import poll_buttons
 from .message import get_message_text
+from wrappers import load_user
 
 
-def button_callback(bot, update):
+@load_user
+def button_callback(bot, update, user):
+    edit_message_args = {
+        'parse_mode': ParseMode.HTML
+    }
+
     query = update.callback_query
-    print(query)
-    user = db.get_user_by_id(query.from_user.id)
+    if query.message:
+        edit_message_args['chat_id'] = query.message.chat.id
+        edit_message_args['message_id'] = query.message.message_id
+    else:
+        edit_message_args['inline_message_id'] = query.inline_message_id
 
     params = query.data.split('_')
     poll = db.get_poll_by_id(params[1])
@@ -17,28 +27,28 @@ def button_callback(bot, update):
     if poll and poll.state != POLL_DELETED:
         action = params[0]
 
-        if action == 'showresults':
-            db.toggle_result_visibility(poll)
-        elif action == 'changeanswer':
-            db.toggle_can_change_answer(poll)
-        elif action == 'close':
-            db.set_poll_state(poll, POLL_CLOSED)
-        elif action == 'open':
-            db.set_poll_state(poll, POLL_OPEN)
-        elif action == 'del':
-            db.set_poll_state(poll, POLL_DELETED)
-        elif action == 'answer':
+        if action == 'answer':
             choice_id = params[2]
             db.save_user_answer(user, poll, choice_id)
+        elif user.is_author(poll):
+            if action == 'showresults':
+                db.toggle_result_visibility(poll)
+            elif action == 'changeanswer':
+                db.toggle_can_change_answer(poll)
+            elif action == 'close':
+                db.set_poll_state(poll, POLL_CLOSED)
+            elif action == 'open':
+                db.set_poll_state(poll, POLL_OPEN)
+            elif action == 'del':
+                db.set_poll_state(poll, POLL_DELETED)
 
-        buttons = poll_buttons[action](poll)
-        message_text = get_message_text(poll, user, action)
+        if not user.is_author(poll):
+            action = 'answer'
+
+        buttons = poll_buttons[action]
         if buttons:
-            bot.edit_message_text(chat_id=query.chat_instance,
-                                  message_id=query.inline_message_id,
-                                  text=message_text,
-                                  reply_markup=buttons)
-        else:
-            bot.edit_message_text(chat_id=query.chat_instance,
-                                  message_id=query.inline_message_id,
-                                  text=message_text)
+            edit_message_args['reply_markup'] = buttons(poll)
+
+        edit_message_args['text'] = get_message_text(poll, user, action)
+
+        bot.edit_message_text(**edit_message_args)

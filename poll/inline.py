@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from telegram import ParseMode
-from db.middleware import db
+from db import db
 from config import WAIT_QUESTION, WAIT_FIRST_CHOICE, WAIT_CHOICE
 
 
 def text_received(bot, update):
     message_text = update.message.text
-    user = db.get_user_by_id(update.message.from_user.id)
+    user = db.get_user_by_id(update.message.from_user)
     if user.state == WAIT_QUESTION:
         db.poll_templates[user.id] = {
             'question': message_text,

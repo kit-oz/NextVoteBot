@@ -23,6 +23,9 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     state = Column(Integer, default=WAIT_QUESTION)
 
+    def is_author(self, poll):
+        return self.id == poll.user_id
+
 
 class Poll(Base):
     __tablename__ = 'poll'
@@ -57,5 +60,6 @@ class Result(Base):
     poll = relationship(Poll, backref='results')
     choice_id = Column(Integer, ForeignKey('choice.id'))
     choice = relationship(Choice, backref='results')
+
 
 Base.metadata.create_all(engine)

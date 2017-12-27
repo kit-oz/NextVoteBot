@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from telegram import ParseMode, InlineQueryResultArticle, InputTextMessageContent
-from db.middleware import db
+from db import db
 from .buttons import poll_buttons
 from .message import get_message_text
+from wrappers import load_user
 
 
-def inline_search(bot, update):
-    user = db.get_user_by_id(update.inline_query.from_user.id)
+@load_user
+def inline_search(bot, update, user):
     query = update.inline_query.query
     if not query:
         poll_list = db.get_user_polls(user)

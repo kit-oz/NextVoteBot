@@ -4,9 +4,11 @@ from __future__ import absolute_import
 from telegram import ParseMode
 
 from config import BOT_NAME, WAIT_QUESTION
-from db.middleware import db
+from db import db
+from config import POLL_OPEN
 from .buttons import poll_buttons
 from .message import get_message_text
+from wrappers import load_user
 
 
 def show_help(bot, update):
@@ -14,16 +16,16 @@ def show_help(bot, update):
                      text="This bot will help you create polls. Use /start to create a poll here, then publish it to groups or send it to individual friends.\n\nSend /polls to manage your existing polls.")
 
 
-def start(bot, update):
-    user = db.get_user_by_id(update.message.from_user.id)
+@load_user
+def start(bot, update, user):
     db.set_user_state(user, WAIT_QUESTION)
 
     bot.send_message(chat_id=update.message.chat_id,
                      text="Let's create a new poll. First, send me the question.")
 
 
-def done(bot, update):
-    user = db.get_user_by_id(update.message.from_user.id)
+@load_user
+def done(bot, update, user):
     db.set_user_state(user, WAIT_QUESTION)
 
     poll = db.create_poll(user)
@@ -33,9 +35,9 @@ def done(bot, update):
         poll_control_view(bot, update, poll)
 
 
-def polls(bot, update):
-    user = db.get_user_by_id(update.message.from_user.id)
-    user_polls = db.get_user_polls(user)
+@load_user
+def polls(bot, update, user):
+    user_polls = db.get_user_polls(user, with_closed=True)
 
     message_text = "You don't have any polls yet."
     if user_polls:
@@ -59,34 +61,41 @@ def polls(bot, update):
                      parse_mode=ParseMode.HTML)
 
 
-def poll_control_view(bot, update, poll):
-    user = db.get_user_by_id(update.message.from_user.id)
-
-    if user.id == poll.user_id:
+@load_user
+def poll_control_view(bot, update, user, poll):
+    if user.is_author(poll):
+        action = 'control' if poll.state == POLL_OPEN else 'close'
+        buttons = poll_buttons[action](poll)
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user, 'control'),
                          parse_mode=ParseMode.HTML,
-                         reply_markup=poll_buttons['control'](poll))
+                         reply_markup=buttons)
+    else:
+        poll_vote_view(bot, update, user, poll)
 
 
-def poll_vote_view(bot, update, poll):
-    user = db.get_user_by_id(update.message.from_user.id)
-    print(update)
-
-    if user.id == poll.user_id:
+@load_user
+def poll_vote_view(bot, update, user, poll):
+    if poll.state == POLL_OPEN:
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user),
                          parse_mode=ParseMode.HTML,
                          reply_markup=poll_buttons['answer'](poll))
+    else:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text=get_message_text(poll, user),
+                         parse_mode=ParseMode.HTML)
 
 
-def unknown_command(bot, update):
+@load_user
+def unknown_command(bot, update, user):
     query = update.message.text
     if '/view_' in query:
         poll_id = query.split('_')[1]
         poll = db.get_poll_by_id(poll_id)
-        poll_control_view(bot, update, poll)
-        return
+        if user.is_author(poll):
+            poll_control_view(bot, update, poll)
+            return
     bot.send_message(chat_id=update.message.chat_id,
                      text="Sorry, I didn't understand that command.")
 

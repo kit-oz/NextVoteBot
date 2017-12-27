@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from config import VISIBLE_ALWAYS, VISIBLE_AFTER_ANSWER, POLL_CLOSED
-from db.middleware import db
+from config import POLL_CLOSED
+from db import db
 
 
 def get_message_text(poll, user, action=''):
@@ -11,7 +11,7 @@ def get_message_text(poll, user, action=''):
 
     poll_results = db.get_poll_results(poll)
 
-    show_result = (action == 'control') or db.check_show_poll_results(poll, user)
+    show_result = db.check_show_poll_results(poll, user, action)
     if show_result:
         poll_results = sorted(poll_results, key=lambda x: x['result_count'], reverse=True)
 

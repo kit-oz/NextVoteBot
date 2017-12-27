@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from telegram import ParseMode
 from telegram.ext import Filters
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, InlineQueryHandler
 
