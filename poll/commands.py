@@ -45,7 +45,7 @@ def polls(bot, update, user):
         poll_list = []
         for index, poll in enumerate(user_polls):
             result_text = 'Nobody voted.'
-            if poll.result_count == 0:
+            if poll.result_count > 0:
                 result_text = '{} person voted.'.format(poll.result_count)
             poll_text = '{index}. {question} <code>{results}</code>\n/view_{id}'.format(
                 index=index + 1,

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from telegram import ParseMode
+from telegram.error import BadRequest
 from db import db
 from config import POLL_OPEN, POLL_CLOSED, POLL_DELETED
 from .buttons import poll_buttons
@@ -24,10 +25,13 @@ def button_callback(bot, update, user):
     params = query.data.split('_')
     poll = db.get_poll_by_id(params[1])
 
-    if poll and poll.state != POLL_DELETED:
+    if not poll:
+        edit_message_args['reply_markup'] = ''
+        bot.editMessageReplyMarkup(**edit_message_args)
+    else:
         action = params[0]
 
-        if action == 'answer':
+        if action == 'answer' and poll.state == POLL_OPEN:
             choice_id = params[2]
             db.save_user_answer(user, poll, choice_id)
         elif user.is_author(poll):
@@ -42,7 +46,9 @@ def button_callback(bot, update, user):
             elif action == 'del':
                 db.set_poll_state(poll, POLL_DELETED)
 
-        if not user.is_author(poll):
+        if poll.state == POLL_DELETED:
+            action = 'del'
+        elif not user.is_author(poll):
             action = 'answer'
 
         buttons = poll_buttons[action]
@@ -51,4 +57,7 @@ def button_callback(bot, update, user):
 
         edit_message_args['text'] = get_message_text(poll, user, action)
 
-        bot.edit_message_text(**edit_message_args)
+        try:
+            bot.edit_message_text(**edit_message_args)
+        except BadRequest:
+            bot.answerCallbackQuery(callback_query_id=query.id)
