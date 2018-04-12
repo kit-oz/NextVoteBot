@@ -11,6 +11,7 @@ from .message import get_message_text
 
 
 def show_help(bot, update):
+    """Callback function for the /help command"""
     bot.send_message(chat_id=update.message.chat_id,
                      text="This bot will help you create polls. Use /start to create a poll here, "
                           "then publish it to groups or send it to individual friends.\n\n"
@@ -19,6 +20,7 @@ def show_help(bot, update):
 
 @load_user
 def start(bot, update, user):
+    """Callback function for the /start command"""
     db.set_user_state(user, user.WRITE_QUESTION)
 
     bot.send_message(chat_id=update.message.chat_id,
@@ -27,6 +29,7 @@ def start(bot, update, user):
 
 @load_user
 def done(bot, update, user):
+    """Callback function when "Done" button are pressed"""
     db.set_user_state(user, user.WRITE_QUESTION)
 
     poll = db.create_poll(user)
@@ -40,6 +43,7 @@ def done(bot, update, user):
 
 @load_user
 def polls(bot, update, user):
+    """Callback function for the /pols command"""
     user_polls = db.get_user_polls(user, with_closed=True)
 
     message_text = "You don't have any polls yet."
@@ -50,7 +54,7 @@ def polls(bot, update, user):
             result_text = 'Nobody voted.'
             if poll.result_count > 0:
                 result_text = '{} person voted.'.format(poll.result_count)
-            poll_text = '{index}. {question} <code>{results}</code>\n/view_{id}'.format(
+            poll_text = '{index}. <b>{question}</b> {results}\n/view_{id}'.format(
                 index=index + 1,
                 question=poll.question,
                 results=result_text,
@@ -66,6 +70,7 @@ def polls(bot, update, user):
 
 @load_user
 def poll_control_view(bot, update, user, poll):
+    """Function for build poll administrator"""
     if user.is_author(poll):
         action = 'control' if poll.is_open() else 'close'
         buttons = poll_buttons[action](poll)
@@ -79,6 +84,7 @@ def poll_control_view(bot, update, user, poll):
 
 @load_user
 def poll_vote_view(bot, update, user, poll):
+    """Show poll with answer buttons"""
     if poll.is_open():
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user),
@@ -92,11 +98,12 @@ def poll_vote_view(bot, update, user, poll):
 
 @load_user
 def unknown_command(bot, update, user):
+    """Callback for other commands"""
     query = update.message.text
     if '/view_' in query:
         poll_id = query.split('_')[1]
         poll = db.get_poll_by_id(poll_id)
-        if user.is_author(poll):
+        if poll and user.is_author(poll):
             poll_control_view(bot, update, poll)
             return
     bot.send_message(chat_id=update.message.chat_id,
@@ -104,5 +111,6 @@ def unknown_command(bot, update, user):
 
 
 def non_text_received(bot, update):
+    """Callback on receiving non text message (image, sticker, etc.)"""
     bot.send_message(chat_id=update.message.chat_id,
                      text="Sorry, I only support text and emoji for questions and answers.")

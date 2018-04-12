@@ -11,11 +11,12 @@ def create_inline_menu(buttons):
 
 
 def main_control_buttons(poll):
-    """Buttons for manage poll"""
+    """Basic poll administrator buttons"""
     if poll.is_open():
         return create_inline_menu([
             [{'text': 'Publish poll', 'switch_inline_query': '{}'.format(poll.id)}],
-            [{'text': 'Update results', 'callback_data': 'control_{}'.format(poll.id)}],
+            # TODO the button throws an exception if the result has not changed
+            # [{'text': 'Update results', 'callback_data': 'control_{}'.format(poll.id)}],
             [{'text': 'Poll settings', 'callback_data': 'settings_{}'.format(poll.id)}],
             [
                 {'text': 'Close', 'callback_data': 'close_{}'.format(poll.id)},
@@ -42,6 +43,7 @@ def settings_buttons(poll):
 
 
 def poll_closed_buttons(poll):
+    """Buttons for closed polls"""
     if poll.is_closed():
         return create_inline_menu([
             [
@@ -52,6 +54,7 @@ def poll_closed_buttons(poll):
 
 
 def confirm_delete_buttons(poll):
+    """Delete confirmation dialog"""
     if not poll.is_deleted():
         return create_inline_menu([
             [
@@ -62,6 +65,7 @@ def confirm_delete_buttons(poll):
 
 
 def answers_buttons(poll):
+    """Buttons with answers to voting"""
     if poll.is_open():
         choice_list = db.get_poll_choices(poll)
         return create_inline_menu(

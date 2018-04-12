@@ -5,7 +5,8 @@ import os
 import sys
 from threading import Thread
 
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater
+from telegram.ext import CommandHandler
 
 from config import Config
 from poll import init_handlers

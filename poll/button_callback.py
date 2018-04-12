@@ -11,6 +11,7 @@ from .message import get_message_text
 
 @load_user
 def button_callback(bot, update, user):
+    """Callback function when inline buttons are pressed"""
     edit_message_args = {
         'parse_mode': ParseMode.HTML
     }
@@ -47,9 +48,7 @@ def button_callback(bot, update, user):
             elif action == 'del':
                 db.set_poll_state(poll, poll.DELETED)
 
-        if not poll.is_deleted():
-            action = 'del'
-        elif not user.is_author(poll):
+        if not user.is_author(poll):
             action = 'answer'
 
         buttons = poll_buttons[action]
@@ -58,6 +57,7 @@ def button_callback(bot, update, user):
 
         edit_message_args['text'] = get_message_text(poll, user, action)
 
+        print(action)
         try:
             bot.edit_message_text(**edit_message_args)
         except BadRequest:

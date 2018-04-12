@@ -17,27 +17,15 @@ from sqlalchemy.orm import sessionmaker
 from config import Config
 
 
-
-
-USER_WAIT_QUESTION = 0
-USER_WAIT_FIRST_CHOICE = 1
-USER_WAIT_OTHER_CHOICE = 2
-
-
-
 engine = create_engine(Config.DATABASE_URI)
 Session = sessionmaker(bind=engine)
+session = Session()
 
 Base = declarative_base()
 
 
 class User(Base):
-    """User base model
-
-    Attributes:
-        id: telegram user ID
-        state: current user state
-    """
+    """Table with users"""
     __tablename__ = 'user'
 
     # User states
@@ -62,6 +50,7 @@ class User(Base):
 
 
 class Poll(Base):
+    """Table with polls"""
     __tablename__ = 'poll'
 
     # Poll states
@@ -103,6 +92,7 @@ class Poll(Base):
 
 
 class Choice(Base):
+    """Table with answers to polls"""
     __tablename__ = 'choice'
     id = Column(Integer, primary_key=True)
     text = Column(String(250))
@@ -112,6 +102,7 @@ class Choice(Base):
 
 
 class Result(Base):
+    """Table with users answers"""
     __tablename__ = 'result'
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)

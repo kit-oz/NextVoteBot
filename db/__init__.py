@@ -18,11 +18,19 @@ from .model import User
 class Database(object):
     def __init__(self):
         self.session = Session()
+        # TODO move templates to the separate class and rewrite user state based on this class
         self.poll_templates = {}
 
-    def get_user_by_id(self, from_user):
-        if not from_user.is_bot:
-            user_id = from_user.id
+    def get_user_by_id(self, telegram_user):
+        """Get user by his Telegram ID
+
+        Create new user if no one found
+
+        Args:
+            telegram_user: Telegram User object
+        """
+        if not telegram_user.is_bot:
+            user_id = telegram_user.id
             user = self.session.query(User).get(user_id)
             if not user:
                 user = User(id=user_id)
@@ -31,11 +39,31 @@ class Database(object):
             return user
 
     def set_user_state(self, user, state):
+        """Change state for the user
+
+        Args:
+            user: instance of a class User
+            state: user state for write
+
+        Returns:
+            None
+        """
         user.state = state
         self.session.add(user)
         self.session.commit()
 
     def get_user_polls(self, user, count=5, page=0, with_closed=False):
+        """Get an array of polls from the current user
+
+        Args:
+            user: instance of a class User
+            count: polls count per page
+            page: page number
+            with_closed: include closed polls or not
+
+        Returns:
+            Array of instances of a class Poll
+        """
         offset = page * count
 
         query = self.session.query(
@@ -58,10 +86,27 @@ class Database(object):
         return query.all()
 
     def get_user_choice(self, user, poll):
+        """Get user choice for current poll
+
+        Args:
+            user: instance of a class User
+            poll: instance of a class Poll
+
+        Returns:
+            result: instance of a class Result
+        """
         return self.session.query(Result).filter(Result.poll_id == poll.id,
                                                  Result.user_id == user.id).first()
 
     def create_poll(self, user):
+        """Create new poll, based on the template
+
+        Args:
+            user: instance of a class User
+
+        Returns:
+            poll: instance of a class Poll
+        """
         if user.id in self.poll_templates:
             poll_template = self.poll_templates[user.id]
             if len(poll_template['choices']) > 0:
@@ -86,9 +131,27 @@ class Database(object):
                 return new_poll
 
     def get_poll_by_id(self, poll_id):
+        """Get poll by ID
+
+        Args:
+            poll_id: poll ID
+
+        Returns:
+            poll: instance of a class Poll
+        """
         return self.session.query(Poll).get(poll_id)
 
     def search_poll(self, user, query_text, count=5):
+        """Search poll by its ID or question text
+
+        Args:
+            user: instance of a class User
+            query_text: poll ID or text from poll question
+            count: polls count for return
+
+        Returns:
+            An array of instances of a class Poll
+        """
         return self.session.query(Poll).filter(
             Poll.user_id == user.id,
             or_(
@@ -98,21 +161,54 @@ class Database(object):
         ).order_by(Poll.date.desc()).limit(count).all()
 
     def set_poll_state(self, poll, state):
+        """Change state for the poll
+
+        Args:
+            poll: instance of a class Poll
+            state: poll state for write
+
+        Returns:
+            None
+        """
         poll.state = state
         self.session.add(poll)
         self.session.commit()
 
     def toggle_result_visibility(self, poll):
+        """Change the visibility of results
+
+        Args:
+            poll: instance of a class Poll
+
+        Returns:
+            None
+        """
         poll.result_visible = 0 if poll.result_visible == 2 else poll.result_visible + 1
         self.session.add(poll)
         self.session.commit()
 
     def toggle_can_change_answer(self, poll):
+        """Change the ability to change the answer
+
+        Args:
+            poll: instance of a class Poll
+
+        Returns:
+            None
+        """
         poll.can_change_answer = not poll.can_change_answer
         self.session.add(poll)
         self.session.commit()
 
     def get_poll_results(self, poll):
+        """Get an array of possible answers for the poll with the number of answers
+
+        Args:
+            poll: instance of a class Poll
+
+        Returns:
+            An array of possible answers for the poll with the number of answers
+        """
         query_results = self.session.query(
             Choice.text,
             func.count(Result.id).label('result_count')
@@ -130,9 +226,28 @@ class Database(object):
         return poll_results
 
     def get_poll_choices(self, poll):
+        """Get an array of possible answers for the poll
+
+        Args:
+            poll: instance of a class Poll
+
+        Returns:
+            An array of instances of a class Choice
+        """
         return self.session.query(Choice).filter(Choice.poll_id == poll.id).all()
 
+    # TODO Add save result return
     def save_user_answer(self, user, poll, choice_id):
+        """Verify that the user can vote and save his response
+
+        Args:
+            user: instance of a class User
+            poll: instance of a class Poll
+            choice_id: ID of the selected answer
+
+        Returns:
+            None
+        """
         choice = self.session.query(Choice).get(choice_id)
         if choice.poll_id == poll.id:
             result = self.session.query(Result).filter(Result.user_id == user.id,
@@ -149,6 +264,16 @@ class Database(object):
             self.session.commit()
 
     def check_show_poll_results(self, poll, user, action=''):
+        """Check can user view poll results
+
+        Args:
+            poll: instance of a class User
+            user: instance of a class User
+            action: current user action
+
+        Returns:
+            True if user can view poll result, else False
+        """
         if poll.is_result_visible_always():
             return True
 

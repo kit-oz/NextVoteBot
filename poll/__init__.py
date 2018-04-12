@@ -6,7 +6,7 @@ from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, I
 
 from .inline import text_received
 from .button_callback import button_callback
-from .inline_search import inline_search
+from .inline import poll_search
 from .commands import show_help, start, done, polls, unknown_command, non_text_received
 
 
@@ -19,7 +19,7 @@ def init_handlers(dispatcher):
     dispatcher.add_handler(MessageHandler(Filters.text, text_received))
     dispatcher.add_handler(CallbackQueryHandler(button_callback))
 
-    dispatcher.add_handler(InlineQueryHandler(inline_search))
+    dispatcher.add_handler(InlineQueryHandler(poll_search))
 
     dispatcher.add_handler(MessageHandler(Filters.command, unknown_command))
     dispatcher.add_handler(MessageHandler((~ Filters.text), non_text_received))
