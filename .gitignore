@@ -9,6 +9,7 @@ migrations/
 db_repository/
 
 *.db
+config.json
 
 *.sublime*
 .vscode/

@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 import sys
 from threading import Thread
 
-import logging
 from telegram.ext import Updater, CommandHandler
 
-from config import BOT_AUTH_TOKEN
-from wrappers import admin_only
+from config import Config
 from poll import init_handlers
+from wrappers import admin_only
 
 
 def main():
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         level=logging.INFO)
 
-    updater = Updater(token=BOT_AUTH_TOKEN)
+    updater = Updater(token=Config.BOT_TOKEN)
 
     def stop_and_restart():
         """Gracefully stop the Updater and replace the current process with a new one"""

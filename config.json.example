@@ -1,0 +1,13 @@
+{
+  "bot": {
+    "token": "YOUR_BOT_TOKEN"
+  },
+
+  "database": {
+    "uri": "sqlite:///app.db"
+  },
+
+  "admin_users": [
+    admins_telegram_id
+  ]
+}

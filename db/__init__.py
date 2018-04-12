@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+
 import random
 import string
-from sqlalchemy import or_, func
-from config import INLINE_SEARCH_RESULTS, VISIBLE_ALWAYS, VISIBLE_AFTER_ANSWER
-from config import POLL_CODE_LENGTH, POLL_OPEN, POLL_DELETED
+
+from sqlalchemy import or_
+from sqlalchemy import func
+
+from .model import Choice
+from .model import Poll
+from .model import Result
 from .model import Session
-from .model import User, Poll, Choice, Result
+from .model import User
 
 
 class Database(object):
@@ -30,7 +35,7 @@ class Database(object):
         self.session.add(user)
         self.session.commit()
 
-    def get_user_polls(self, user, count=INLINE_SEARCH_RESULTS, page=0, with_closed=False):
+    def get_user_polls(self, user, count=5, page=0, with_closed=False):
         offset = page * count
 
         query = self.session.query(
@@ -43,9 +48,9 @@ class Database(object):
         query = query.filter(Poll.user_id == user.id)
 
         if with_closed:
-            query = query.filter(Poll.state != POLL_DELETED)
+            query = query.filter(Poll.state != Poll.DELETED)
         else:
-            query = query.filter(Poll.state == POLL_OPEN)
+            query = query.filter(Poll.state == Poll.OPEN)
 
         query = query.group_by(Poll.id)
         query = query.offset(offset).limit(count)
@@ -61,7 +66,8 @@ class Database(object):
             poll_template = self.poll_templates[user.id]
             if len(poll_template['choices']) > 0:
                 while True:
-                    new_code = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(POLL_CODE_LENGTH))
+                    new_code = ''.join(random.choice(string.ascii_letters + string.digits)
+                                       for _ in range(Poll.CODE_LENGTH))
                     poll_with_code = self.session.query(Poll).get(new_code)
                     if not poll_with_code:
                         break
@@ -82,7 +88,7 @@ class Database(object):
     def get_poll_by_id(self, poll_id):
         return self.session.query(Poll).get(poll_id)
 
-    def search_poll(self, user, query_text, count=INLINE_SEARCH_RESULTS):
+    def search_poll(self, user, query_text, count=5):
         return self.session.query(Poll).filter(
             Poll.user_id == user.id,
             or_(
@@ -143,14 +149,14 @@ class Database(object):
             self.session.commit()
 
     def check_show_poll_results(self, poll, user, action=''):
-        if poll.result_visible == VISIBLE_ALWAYS:
+        if poll.is_result_visible_always():
             return True
 
         if user.is_author(poll) and action != 'answer':
             return True
 
         user_choice = self.get_user_choice(user=user, poll=poll)
-        if user_choice and poll.result_visible == VISIBLE_AFTER_ANSWER:
+        if user_choice and poll.is_result_visible_after_answer():
             return True
 
         return False

@@ -1,43 +1,105 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+
+from sqlalchemy import Boolean
 from sqlalchemy import Column
-from sqlalchemy import Integer, String, DateTime, Boolean
+from sqlalchemy import create_engine
+from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
-from config import SQLALCHEMY_DATABASE_URI
-from config import POLL_CODE_LENGTH, WAIT_QUESTION, VISIBLE_AFTER_ANSWER, POLL_OPEN
+
+from config import Config
 
 
-engine = create_engine(SQLALCHEMY_DATABASE_URI)
+
+
+USER_WAIT_QUESTION = 0
+USER_WAIT_FIRST_CHOICE = 1
+USER_WAIT_OTHER_CHOICE = 2
+
+
+
+engine = create_engine(Config.DATABASE_URI)
 Session = sessionmaker(bind=engine)
 
 Base = declarative_base()
 
 
 class User(Base):
+    """User base model
+
+    Attributes:
+        id: telegram user ID
+        state: current user state
+    """
     __tablename__ = 'user'
+
+    # User states
+    WRITE_QUESTION = 0
+    WRITE_FIRST_ANSWER = 1
+    WRITE_OTHER_ANSWER = 2
+
     id = Column(Integer, primary_key=True)
-    state = Column(Integer, default=WAIT_QUESTION)
+    state = Column(Integer, default=WRITE_QUESTION)
 
     def is_author(self, poll):
         return self.id == poll.user_id
 
+    def is_write_question(self):
+        return self.state == self.WRITE_QUESTION
+
+    def is_write_first_answer(self):
+        return self.state == self.WRITE_FIRST_ANSWER
+
+    def is_write_other_answer(self):
+        return self.state == self.WRITE_OTHER_ANSWER
+
 
 class Poll(Base):
     __tablename__ = 'poll'
-    id = Column(String(POLL_CODE_LENGTH), primary_key=True)
+
+    # Poll states
+    OPEN = 0
+    CLOSED = 1
+    DELETED = 2
+
+    # Results visibility options
+    RESULT_VISIBLE_NEVER = 0
+    RESULT_VISIBLE_AFTER_ANSWER = 1
+    RESULT_VISIBLE_ALWAYS = 2
+
+    CODE_LENGTH = 7
+
+    id = Column(String(CODE_LENGTH), primary_key=True)
     question = Column(String(250))
     date = Column(DateTime, default=datetime.utcnow)
-    state = Column(Integer, default=POLL_OPEN)
-    result_visible = Column(Integer, default=VISIBLE_AFTER_ANSWER)
+    state = Column(Integer, default=OPEN)
+    result_visible = Column(Integer, default=RESULT_VISIBLE_AFTER_ANSWER)
     can_change_answer = Column(Boolean, default=True)
 
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User, backref='polls')
+
+    def is_open(self):
+        return self.state == self.OPEN
+
+    def is_closed(self):
+        return self.state == self.CLOSED
+
+    def is_deleted(self):
+        return self.state == self.DELETED
+
+    def is_result_visible_always(self):
+        return self.result_visible == self.RESULT_VISIBLE_ALWAYS
+
+    def is_result_visible_after_answer(self):
+        return self.result_visible == self.RESULT_VISIBLE_AFTER_ANSWER
 
 
 class Choice(Base):

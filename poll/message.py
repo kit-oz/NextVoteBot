@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from config import POLL_CLOSED
 from db import db
 
 
@@ -40,7 +39,7 @@ def get_message_text(poll, user, action=''):
         footer = '👥 {} people voted so far.'.format(total_results)
     message_text.append(footer)
 
-    if poll.state == POLL_CLOSED:
+    if poll.closed:
         message_text[2] += ' <i>Poll closed.</i>'
 
     if action == 'delete':

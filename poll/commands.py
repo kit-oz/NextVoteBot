@@ -1,24 +1,25 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+
 from telegram import ParseMode
 
-from config import BOT_NAME, WAIT_QUESTION
 from db import db
-from config import POLL_OPEN
+from wrappers import load_user
 from .buttons import poll_buttons
 from .message import get_message_text
-from wrappers import load_user
 
 
 def show_help(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-                     text="This bot will help you create polls. Use /start to create a poll here, then publish it to groups or send it to individual friends.\n\nSend /polls to manage your existing polls.")
+                     text="This bot will help you create polls. Use /start to create a poll here, "
+                          "then publish it to groups or send it to individual friends.\n\n"
+                          "Send /polls to manage your existing polls.")
 
 
 @load_user
 def start(bot, update, user):
-    db.set_user_state(user, WAIT_QUESTION)
+    db.set_user_state(user, user.WRITE_QUESTION)
 
     bot.send_message(chat_id=update.message.chat_id,
                      text="Let's create a new poll. First, send me the question.")
@@ -26,12 +27,14 @@ def start(bot, update, user):
 
 @load_user
 def done(bot, update, user):
-    db.set_user_state(user, WAIT_QUESTION)
+    db.set_user_state(user, user.WRITE_QUESTION)
 
     poll = db.create_poll(user)
     if poll:
         bot.send_message(chat_id=update.message.chat_id,
-                         text="👍 Poll created. You can now publish it to a group or send it to your friends in a private message. To do this, tap the button below or start your message in any other chat with @{} and select one of your polls to send.".format(BOT_NAME))
+                         text="👍 Poll created. You can now publish it to a group or send it to your friends "
+                              "in a private message. To do this, tap the button below or start your message "
+                              "in any other chat with @NextVoteBot and select one of your polls to send.")
         poll_control_view(bot, update, poll)
 
 
@@ -64,7 +67,7 @@ def polls(bot, update, user):
 @load_user
 def poll_control_view(bot, update, user, poll):
     if user.is_author(poll):
-        action = 'control' if poll.state == POLL_OPEN else 'close'
+        action = 'control' if poll.is_open() else 'close'
         buttons = poll_buttons[action](poll)
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user, 'control'),
@@ -76,7 +79,7 @@ def poll_control_view(bot, update, user, poll):
 
 @load_user
 def poll_vote_view(bot, update, user, poll):
-    if poll.state == POLL_OPEN:
+    if poll.is_open():
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user),
                          parse_mode=ParseMode.HTML,

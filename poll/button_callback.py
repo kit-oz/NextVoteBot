@@ -2,11 +2,11 @@
 
 from telegram import ParseMode
 from telegram.error import BadRequest
+
 from db import db
-from config import POLL_OPEN, POLL_CLOSED, POLL_DELETED
+from wrappers import load_user
 from .buttons import poll_buttons
 from .message import get_message_text
-from wrappers import load_user
 
 
 @load_user
@@ -31,22 +31,23 @@ def button_callback(bot, update, user):
     else:
         action = params[0]
 
-        if action == 'answer' and poll.state == POLL_OPEN:
+        if action == 'answer' and poll.is_open():
             choice_id = params[2]
             db.save_user_answer(user, poll, choice_id)
+            bot.answerCallbackQuery(callback_query_id=query.id, text='You vote for {}'.format(choice_id))
         elif user.is_author(poll):
             if action == 'showresults':
                 db.toggle_result_visibility(poll)
             elif action == 'changeanswer':
                 db.toggle_can_change_answer(poll)
             elif action == 'close':
-                db.set_poll_state(poll, POLL_CLOSED)
+                db.set_poll_state(poll, poll.CLOSED)
             elif action == 'open':
-                db.set_poll_state(poll, POLL_OPEN)
+                db.set_poll_state(poll, poll.OPEN)
             elif action == 'del':
-                db.set_poll_state(poll, POLL_DELETED)
+                db.set_poll_state(poll, poll.DELETED)
 
-        if poll.state == POLL_DELETED:
+        if not poll.is_deleted():
             action = 'del'
         elif not user.is_author(poll):
             action = 'answer'
@@ -60,4 +61,4 @@ def button_callback(bot, update, user):
         try:
             bot.edit_message_text(**edit_message_args)
         except BadRequest:
-            bot.answerCallbackQuery(callback_query_id=query.id)
+            bot.answerCallbackQuery(callback_query_id=query.id, text='Shit happens')
