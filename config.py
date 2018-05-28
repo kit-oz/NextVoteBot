@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import json
-
-config = json.load(open('config.json'))
+import os
 
 
 class Config:
-    BOT_TOKEN = config['bot']['token']
+    BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
 
-    DATABASE_URI = config['database']['uri']
+    DATABASE_URI = 'sqlite:///app.db'
 
-    ADMIN_USERS = config['admin_users']
+    ADMIN_USERS = int(os.environ.get('ADMIN_USER', 0))
 
     RESULT_VISIBLE_MSG = ['never', 'after answer', 'always']
