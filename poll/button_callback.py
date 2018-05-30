@@ -28,7 +28,7 @@ def button_callback(bot, update, user):
 
     if not poll:
         edit_message_args['reply_markup'] = ''
-        bot.editMessageReplyMarkup(**edit_message_args)
+        # bot.editMessageReplyMarkup(**edit_message_args)
     else:
         action = params[0]
 

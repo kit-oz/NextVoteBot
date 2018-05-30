@@ -14,10 +14,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
-from config import Config
+from config import DATABASE_URI
 
 
-engine = create_engine(Config.DATABASE_URI)
+engine = create_engine(DATABASE_URI)
 Session = sessionmaker(bind=engine)
 session = Session()
 

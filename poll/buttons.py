@@ -2,7 +2,7 @@
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from config import Config
+from config import RESULT_VISIBLE_MSG
 from db import db
 
 
@@ -31,7 +31,7 @@ def settings_buttons(poll):
         can_change_answer = 'yes' if poll.can_change_answer else 'no'
         return create_inline_menu([
             [{
-                'text': 'Show results: {}'.format(Config.RESULT_VISIBLE_MSG[poll.result_visible]),
+                'text': 'Show results: {}'.format(RESULT_VISIBLE_MSG[poll.result_visible]),
                 'callback_data': 'showresults_{}'.format(poll.id)
             }],
             [{
