@@ -4,7 +4,7 @@ import logging
 
 from telegram.ext import Updater
 
-from config import BOT_TOKEN, HOST_NAME, PORT_NUMBER
+from config import BOT_TOKEN, HOST_NAME, PORT
 from poll import init_handlers
 
 
@@ -23,9 +23,9 @@ def main():
 
     # updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
-                          port=PORT_NUMBER,
+                          port=PORT,
                           url_path=BOT_TOKEN)
-    updater.bot.setWebhook("https://{}:{}/{}".format(HOST_NAME, PORT_NUMBER, BOT_TOKEN))
+    updater.bot.setWebhook("https://{}/{}".format(HOST_NAME, BOT_TOKEN))
     updater.idle()
 
 
