@@ -24,11 +24,12 @@ def button_callback(bot, update, user):
         edit_message_args['inline_message_id'] = query.inline_message_id
 
     params = query.data.split('_')
-    poll = db.get_poll_by_id(params[1])
+    poll = db.get_poll(params[1])
 
     if not poll:
         edit_message_args['reply_markup'] = ''
         # bot.editMessageReplyMarkup(**edit_message_args)
+        bot.answerCallbackQuery(callback_query_id=query.id, text="You can't vote for this poll")
     else:
         action = params[0]
 
@@ -36,7 +37,7 @@ def button_callback(bot, update, user):
             choice_id = params[2]
             db.save_user_answer(user, poll, choice_id)
             bot.answerCallbackQuery(callback_query_id=query.id, text='You vote for {}'.format(choice_id))
-        elif user.is_author(poll):
+        elif poll.author == user:
             if action == 'showresults':
                 db.toggle_result_visibility(poll)
             elif action == 'changeanswer':
@@ -48,7 +49,7 @@ def button_callback(bot, update, user):
             elif action == 'del':
                 db.set_poll_state(poll, poll.DELETED)
 
-        if not user.is_author(poll):
+        if poll.author != user:
             action = 'answer'
 
         buttons = poll_buttons[action]

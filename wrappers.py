@@ -3,6 +3,7 @@
 from functools import wraps
 
 from config import ADMIN_USERS
+from config import MESSAGES
 from db import db
 
 
@@ -11,7 +12,7 @@ def admin_only(func):
     def wrapped(bot, update, *args, **kwargs):
         user_id = update.effective_user.id
         if user_id not in ADMIN_USERS:
-            bot.send_message(chat_id=update.message.chat_id, text="Sorry, I didn't understand that command.")
+            bot.send_message(chat_id=update.message.chat_id, text=MESSAGES['ERROR_UNKNOWN_COMMAND'])
             return
         return func(bot, update, *args, **kwargs)
     return wrapped
@@ -28,7 +29,10 @@ def load_user(func):
         elif update.inline_query:
             from_user = update.inline_query.from_user
         if from_user:
-            user = db.get_user_by_id(from_user)
+            if from_user.is_bot:
+                return
+
+            user = db.get_user(from_user.id)
             if user:
                 return func(bot, update, user, *args, **kwargs)
     return wrapper

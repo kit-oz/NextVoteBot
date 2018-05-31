@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import random
+import string
+
 from datetime import datetime
 
 from sqlalchemy import Boolean
@@ -9,8 +12,9 @@ from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy import select
 from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
@@ -28,25 +32,17 @@ class User(Base):
     """Table with users"""
     __tablename__ = 'user'
 
-    # User states
-    WRITE_QUESTION = 0
-    WRITE_FIRST_ANSWER = 1
-    WRITE_OTHER_ANSWER = 2
-
     id = Column(Integer, primary_key=True)
-    state = Column(Integer, default=WRITE_QUESTION)
 
-    def is_author(self, poll):
-        return self.id == poll.user_id
+    polls = relationship(Poll, backref='author')
 
-    def is_write_question(self):
-        return self.state == self.WRITE_QUESTION
+    @hybrid_property
+    def opened_polls(self):
+        return [poll for poll in self.polls if poll.is_open()]
 
-    def is_write_first_answer(self):
-        return self.state == self.WRITE_FIRST_ANSWER
-
-    def is_write_other_answer(self):
-        return self.state == self.WRITE_OTHER_ANSWER
+    @hybrid_property
+    def closed_polls(self):
+        return [poll for poll in self.polls if poll.is_closed()]
 
 
 class Poll(Base):
@@ -54,9 +50,10 @@ class Poll(Base):
     __tablename__ = 'poll'
 
     # Poll states
-    OPEN = 0
-    CLOSED = 1
-    DELETED = 2
+    DRAFT = 0
+    OPEN = 1
+    CLOSED = 2
+    DELETED = 3
 
     # Results visibility options
     RESULT_VISIBLE_NEVER = 0
@@ -66,23 +63,53 @@ class Poll(Base):
     CODE_LENGTH = 7
 
     id = Column(String(CODE_LENGTH), primary_key=True)
-    question = Column(String(250))
+
     date = Column(DateTime, default=datetime.utcnow)
-    state = Column(Integer, default=OPEN)
+    user_id = Column(Integer, ForeignKey('user.id'))
+
+    question = Column(String(250))
+    choices = relationship("Choice", back_populates='poll', cascade="all, delete, delete-orphan")
+
+    state = Column(Integer, default=DRAFT)
     result_visible = Column(Integer, default=RESULT_VISIBLE_AFTER_ANSWER)
     can_change_answer = Column(Boolean, default=True)
 
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User, backref='polls')
+    def __init__(self, user, question):
+        while True:
+            new_code = ''.join(random.choice(string.ascii_letters + string.digits)
+                               for _ in range(self.CODE_LENGTH))
+            poll_with_code = session.query(Poll).get(new_code)
+            if not poll_with_code:
+                break
 
-    def is_open(self):
-        return self.state == self.OPEN
+        self.id = new_code
+        self.user_id = user.id
+        self.question = question
 
+    @hybrid_property
     def is_closed(self):
         return self.state == self.CLOSED
 
+    @hybrid_property
     def is_deleted(self):
         return self.state == self.DELETED
+
+    @hybrid_property
+    def is_draft(self):
+        return self.state == self.DRAFT
+
+    @is_draft.expression
+    def is_draft(cls):
+        return select(cls).where(cls.state == cls.DRAFT)
+        # return cls.state == cls.DRAFT
+
+    @hybrid_property
+    def is_open(self):
+        return self.state == self.OPEN
+
+    @hybrid_property
+    def votes(self):
+        return sum(choice.results.count() for choice in self.choices)
 
     def is_result_visible_always(self):
         return self.result_visible == self.RESULT_VISIBLE_ALWAYS
@@ -98,7 +125,9 @@ class Choice(Base):
     text = Column(String(250))
 
     poll_id = Column(Integer, ForeignKey('poll.id'))
-    poll = relationship(Poll, backref='choices')
+    poll = relationship(Poll, back_populates='poll')
+
+    results = relationship("Result", back_populates='choice', cascade="all, delete, delete-orphan")
 
 
 class Result(Base):
@@ -109,10 +138,9 @@ class Result(Base):
 
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User, backref='results')
-    poll_id = Column(Integer, ForeignKey('poll.id'))
-    poll = relationship(Poll, backref='results')
+
     choice_id = Column(Integer, ForeignKey('choice.id'))
-    choice = relationship(Choice, backref='results')
+    choice = relationship(Choice, back_populates='results')
 
 
 Base.metadata.create_all(engine)

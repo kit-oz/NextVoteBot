@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
 
+from config import MESSAGES
 from db import db
+
+
+def get_chart(poll, show_result=True):
+    if show_result:
+        choices = [{
+            'text': choice.text,
+            'votes': choice.results.count(),
+            'percent': 0 if poll.votes == 0 else 100 * choice.results.count() / poll.votes
+        } for choice in poll.choices]
+        choices = sorted(choices, key=lambda x: x['votes'], reverse=True)
+        result = ['{} - {}\n{}%'.format(
+            choice['text'],
+            choice['votes'],
+            '{:.0f}'.format(choice['percent'])
+        ) for choice in choices]
+    else:
+        result = [choice['text'] for choice in poll.choices]
+
+    return '\n\n'.join(result)
 
 
 def get_message_text(poll, user, action=''):
@@ -9,41 +29,24 @@ def get_message_text(poll, user, action=''):
         '<b>{}</b>'.format(poll.question),
     ]
 
-    poll_results = db.get_poll_results(poll)
-
     show_result = db.check_show_poll_results(poll, user, action)
-    if show_result:
-        poll_results = sorted(poll_results, key=lambda x: x['result_count'], reverse=True)
 
-    # max_result = max(poll_result['result_count'] for poll_result in poll_results)
-    total_results = sum(poll_result['result_count'] for poll_result in poll_results)
-
-    choices = []
-    for choice in poll_results:
-        if show_result:
-            # TODO add emoticons as a chart
-            choice_result = choice['result_count']
-            choice_percent = 0 if total_results == 0 else 100 * choice_result / total_results
-            choices.append('{} - {}\n{}%'.format(choice['text'], choice_result, '{:.0f}'.format(choice_percent)))
-        else:
-            choices.append(choice['text'])
-
-    message_text.append('\n\n'.join(choices))
+    chart = get_chart(poll, show_result)
+    message_text.append(chart)
 
     footer = []
-    if total_results == 0:
-        footer.append('👥 Nobody voted so far.')
-    elif total_results == 1:
-        footer.append('👥 1 person voted so far.')
+    if poll.votes == 0:
+        footer.append(MESSAGES['POLL_FOOTER_NO_VOTES'])
+    elif poll.votes == 1:
+        footer.append(MESSAGES['POLL_FOOTER_ONE_VOTE'])
     else:
-        footer.append('👥 {} people voted so far.'.format(total_results))
+        footer.append(MESSAGES['POLL_FOOTER_VOTES'].format(votes=poll.votes))
 
-    if poll.is_closed():
-        footer.append(' <i>Poll closed.</i>')
-    message_text.append(''.join(footer))
+    if not poll.is_open():
+        footer.append(MESSAGES['POLL_FOOTER_CLOSED'])
+    message_text.append(' '.join(footer))
 
     if action == 'delete':
-        message_text.append('\n<b>Deleting a poll with permanently remove it from your inline suggestions '
-                            'and bot settings. It will appear closed to all other users.\n\nDelete poll?</b>')
+        message_text.append(MESSAGES['POLL_DELETE_ALERT'])
 
     return '\n\n'.join(message_text)
