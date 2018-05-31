@@ -34,7 +34,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
 
-    polls = relationship(Poll, backref='author')
+    polls = relationship('Poll', backref='author')
 
     @hybrid_property
     def opened_polls(self):
@@ -68,7 +68,7 @@ class Poll(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
 
     question = Column(String(250))
-    choices = relationship("Choice", back_populates='poll', cascade="all, delete, delete-orphan")
+    choices = relationship('Choice', back_populates='poll', cascade="all, delete, delete-orphan")
 
     state = Column(Integer, default=DRAFT)
     result_visible = Column(Integer, default=RESULT_VISIBLE_AFTER_ANSWER)
@@ -125,9 +125,9 @@ class Choice(Base):
     text = Column(String(250))
 
     poll_id = Column(Integer, ForeignKey('poll.id'))
-    poll = relationship(Poll, back_populates='poll')
+    poll = relationship('Poll', back_populates='poll')
 
-    results = relationship("Result", back_populates='choice', cascade="all, delete, delete-orphan")
+    results = relationship('Result', back_populates='choice', cascade="all, delete, delete-orphan")
 
 
 class Result(Base):
@@ -137,10 +137,10 @@ class Result(Base):
     date = Column(DateTime, default=datetime.utcnow)
 
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User, backref='results')
+    user = relationship('User', backref='results')
 
     choice_id = Column(Integer, ForeignKey('choice.id'))
-    choice = relationship(Choice, back_populates='results')
+    choice = relationship('Choice', back_populates='results')
 
 
 Base.metadata.create_all(engine)
