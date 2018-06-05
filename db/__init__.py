@@ -5,16 +5,20 @@ from __future__ import absolute_import
 from sqlalchemy import or_
 from sqlalchemy import func
 
-from .model import Choice
-from .model import Poll
-from .model import Result
-from .model import Session
-from .model import User
+from .base import Base
+from .base import Session
+from .base import engine
+from .choice import Choice
+from .poll import Poll
+from .result import Result
+from .user import User
 
 
-class Database(object):
+class Database:
     def __init__(self):
         self.session = Session()
+
+        Base.metadata.create_all()
 
     def create_choice(self, poll, text):
         """Create new choice for poll
@@ -57,10 +61,7 @@ class Database(object):
         Returns:
             None
         """
-        poll_draft = db.get_poll_draft(user)
-        if poll_draft:
-            self.session.delete(poll_draft)
-            self.session.commit()
+        self.session.query(Poll).filter_by(author_id=user.id, state=Poll.DRAFT).delete()
 
     def get_user(self, user_id):
         """Get user by his Telegram ID
@@ -106,16 +107,18 @@ class Database(object):
         """
         return self.session.query(Poll).get(poll_id)
 
-    def get_poll_draft(self, user):
+    def get_poll_draft(self, author):
         """Get poll draft of this user
 
         Args:
-            user: instance of a class User
+            author: instance of a class User
 
         Returns:
             poll: instance of a class Poll
         """
-        return self.session.query(Poll).filter(Poll.user_id == user.id, Poll.is_draft).first()
+        poll_draft = self.session.query(Poll).filter(Poll.author_id == author.id, Poll.state == Poll.DRAFT).first()
+        print('WOWOWOWOWWOW', poll_draft)
+        return poll_draft
 
 
 
@@ -143,7 +146,7 @@ class Database(object):
             func.count(Result.id).label('result_count')
         )
         query = query.outerjoin(Result)
-        query = query.filter(Poll.user_id == user.id)
+        query = query.filter(Poll.author_id == user.id)
         query = query.filter(Poll.state != Poll.DRAFT)
 
         if with_closed:
@@ -168,7 +171,7 @@ class Database(object):
             An array of instances of a class Poll
         """
         return self.session.query(Poll).filter(
-            Poll.user_id == user.id,
+            Poll.author_id == user.id,
             or_(
                 Poll.question.ilike('%{}%'.format(query_text)),
                 Poll.id.like('%{}%'.format(query_text))

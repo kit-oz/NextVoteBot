@@ -14,8 +14,9 @@ from .message import get_message_text
 @load_user
 def text_received(bot, update, user):
     """Save incoming text messages as poll template"""
+    print('INLINE USER', user, user.id)
     message_text = update.message.text
-    poll_draft = db.get_poll_draft()
+    poll_draft = db.get_poll_draft(user)
     if not poll_draft:
         db.create_poll(user=user, question=message_text)
 

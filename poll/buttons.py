@@ -3,7 +3,6 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import RESULT_VISIBLE_MSG
-from db import db
 
 
 def create_inline_menu(buttons):

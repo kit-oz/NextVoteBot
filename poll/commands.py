@@ -49,10 +49,10 @@ def start(bot, update, user):
 @load_user
 def polls(bot, update, user):
     """Callback function for the /pols command"""
-    user_polls = db.get_user_polls(user, with_closed=True)
+    user_polls = user.opened_polls
 
     message_text = "You don't have any polls yet."
-    if user_polls:
+    if len(user_polls) > 0:
         message_text = "Your polls\n\n"
         poll_list = []
         for index, poll in enumerate(user_polls):

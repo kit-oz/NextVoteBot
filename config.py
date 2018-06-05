@@ -3,10 +3,10 @@
 import os
 
 
-ADMIN_USERS = int(os.environ.get("ADMIN_USER", 0))
-BOT_TOKEN = os.environ.get("BOT_TOKEN", '')
+ADMIN_USERS = int(os.environ.get("ADMIN_USER", 131031814))
+BOT_TOKEN = os.environ.get("BOT_TOKEN", '471075290:AAHqKLfy2mNuSWD6FP8R0vx5BiamN66KJho')
 HOST_NAME = os.environ.get("HOST_NAME", '')
-PORT = int(os.environ.get("PORT"))
+PORT = int(os.environ.get("PORT", 443))
 
 
 DATABASE_URI = "sqlite:///app.db"
