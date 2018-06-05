@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import Column
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy.orm import relationship
-
-from .base import Base
+from .common import db
 from .result import Result
 
 
-class Choice(Base):
+class Choice(db.Model):
     """Table with answers to polls"""
     __tablename__ = 'choice'
-    id = Column(Integer, primary_key=True)
-    text = Column(String(250))
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(250))
 
-    poll_id = Column(Integer, ForeignKey('poll.id'))
+    poll_id = db.Column(db.Integer, db.ForeignKey('poll.id'))
 
-    results = relationship(Result, backref='choice', cascade="delete, delete-orphan")
+    results = db.relationship(Result, backref='choice', cascade="delete, delete-orphan")

@@ -5,13 +5,10 @@ __pycache__/
 
 tmp/
 env/
-migrations/
-db_repository/
 
 *.db
-config.json
 
-*.sublime*
 .vscode/
 .idea/
-uploads/*/*
+
+*.sh

@@ -11,7 +11,7 @@ def create_inline_menu(buttons):
 
 def main_control_buttons(poll):
     """Basic poll administrator buttons"""
-    if poll.is_open():
+    if poll.is_open:
         return create_inline_menu([
             [{'text': 'Publish poll', 'switch_inline_query': '{}'.format(poll.id)}],
             # TODO the button throws an exception if the result has not changed
@@ -26,7 +26,7 @@ def main_control_buttons(poll):
 
 def settings_buttons(poll):
     """Poll settings menu"""
-    if poll.is_open():
+    if poll.is_open:
         can_change_answer = 'yes' if poll.can_change_answer else 'no'
         return create_inline_menu([
             [{
@@ -43,7 +43,7 @@ def settings_buttons(poll):
 
 def poll_closed_buttons(poll):
     """Buttons for closed polls"""
-    if poll.is_closed():
+    if poll.is_closed:
         return create_inline_menu([
             [
                 {'text': 'Open', 'callback_data': 'open_{}'.format(poll.id)},
@@ -54,7 +54,7 @@ def poll_closed_buttons(poll):
 
 def confirm_delete_buttons(poll):
     """Delete confirmation dialog"""
-    if not poll.is_deleted():
+    if not poll.is_deleted:
         return create_inline_menu([
             [
                 {'text': 'Yes', 'callback_data': 'del_{}'.format(poll.id)},
@@ -65,7 +65,7 @@ def confirm_delete_buttons(poll):
 
 def answers_buttons(poll):
     """Buttons with answers to voting"""
-    if poll.is_open():
+    if poll.is_open:
         return create_inline_menu(
             [[{'text': choice.text, 'callback_data': 'answer_{}_{}'.format(poll.id, choice.id)}]
              for choice in poll.choices]

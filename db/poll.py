@@ -5,21 +5,13 @@ import string
 
 from datetime import datetime
 
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-from sqlalchemy import String
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
 
-from .base import Base
-from .base import Session
+from .common import db
 from .choice import Choice
 
 
-class Poll(Base):
+class Poll(db.Model):
     """Table with polls"""
     __tablename__ = 'poll'
 
@@ -36,28 +28,28 @@ class Poll(Base):
 
     CODE_LENGTH = 7
 
-    id = Column(String(CODE_LENGTH), primary_key=True)
-    date = Column(DateTime, default=datetime.utcnow)
-    question = Column(String(250))
+    id = db.Column(db.String(CODE_LENGTH), primary_key=True)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    question = db.Column(db.String(250))
 
-    state = Column(Integer, default=DRAFT)
-    result_visible = Column(Integer, default=RESULT_VISIBLE_AFTER_ANSWER)
-    can_change_answer = Column(Boolean, default=True)
+    state = db.Column(db.Integer, default=DRAFT)
+    result_visible = db.Column(db.Integer, default=RESULT_VISIBLE_AFTER_ANSWER)
+    can_change_answer = db.Column(db.Boolean, default=True)
 
-    author_id = Column(Integer, ForeignKey('user.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    choices = relationship(Choice, backref='poll', cascade="delete, delete-orphan")
+    choices = db.relationship(Choice, backref='poll', cascade="delete, delete-orphan")
 
-    def __init__(self, user, question):
+    def __init__(self, author, question):
         while True:
             new_code = ''.join(random.choice(string.ascii_letters + string.digits)
                                for _ in range(self.CODE_LENGTH))
-            poll_with_code = Session.query(Poll).get(new_code)
+            poll_with_code = db.query(Poll).get(new_code)
             if not poll_with_code:
                 break
 
         self.id = new_code
-        self.user_id = user.id
+        self.author_id = author.id
         self.question = question
 
     @hybrid_property
@@ -74,10 +66,4 @@ class Poll(Base):
 
     @hybrid_property
     def votes(self):
-        return sum(choice.results.count() for choice in self.choices)
-
-    def is_result_visible_always(self):
-        return self.result_visible == self.RESULT_VISIBLE_ALWAYS
-
-    def is_result_visible_after_answer(self):
-        return self.result_visible == self.RESULT_VISIBLE_AFTER_ANSWER
+        return sum(len(choice.results) for choice in self.choices)

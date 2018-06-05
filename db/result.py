@@ -2,19 +2,14 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-
-from .base import Base
+from .common import db
 
 
-class Result(Base):
+class Result(db.Model):
     """Table with users answers"""
     __tablename__ = 'result'
-    id = Column(Integer, primary_key=True)
-    date = Column(DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user_id = Column(Integer, ForeignKey('user.id'))
-    choice_id = Column(Integer, ForeignKey('choice.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    choice_id = db.Column(db.Integer, db.ForeignKey('choice.id'))

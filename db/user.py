@@ -1,25 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import String
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
 
-from .base import Base
+from .common import db
 from .poll import Poll
 from .result import Result
 
 
-class User(Base):
+class User(db.Model):
     """Table with users"""
     __tablename__ = 'user'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
 
-    polls = relationship(Poll, backref='author', cascade="delete, delete-orphan")
-    votes = relationship(Result, backref='user')
+    polls = db.relationship(Poll, backref='author', cascade="delete, delete-orphan")
+    votes = db.relationship(Result, backref='user')
 
     @hybrid_property
     def opened_polls(self):

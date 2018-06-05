@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from telegram import ParseMode
 
 from config import MESSAGES
-from db import db
+from db.manager import DatabaseManager
 from wrappers import load_user
 from .buttons import poll_buttons
 from .message import get_message_text
@@ -14,17 +14,17 @@ from .message import get_message_text
 @load_user
 def done(bot, update, user):
     """Callback function when "Done" button are pressed"""
-    poll_draft = db.get_poll_draft(user)
+    poll_draft = DatabaseManager.get_poll_draft(user)
     if not poll_draft:
         show_help(bot, update)
         return
 
-    if poll_draft.choices.count() == 0:
+    if len(poll_draft.choices) == 0:
         bot.send_message(chat_id=update.message.chat_id,
                          text=MESSAGES['ERROR_NO_CHOICES'])
         return
 
-    db.open_poll(poll_draft)
+    DatabaseManager.open_poll(poll_draft)
 
     bot.send_message(chat_id=update.message.chat_id,
                      text=MESSAGES['POLL_CREATED'])
@@ -40,7 +40,7 @@ def show_help(bot, update):
 @load_user
 def start(bot, update, user):
     """Callback function for the /start command"""
-    db.delete_draft_poll(user)
+    DatabaseManager.delete_draft_poll(user)
 
     bot.send_message(chat_id=update.message.chat_id,
                      text=MESSAGES['START'])
@@ -57,8 +57,8 @@ def polls(bot, update, user):
         poll_list = []
         for index, poll in enumerate(user_polls):
             result_text = 'Nobody voted.'
-            if poll.result_count > 0:
-                result_text = '{} person voted.'.format(poll.result_count)
+            if poll.votes > 0:
+                result_text = '{} person voted.'.format(poll.votes)
             poll_text = '{index}. <b>{question}</b> {results}\n/view_{id}'.format(
                 index=index + 1,
                 question=poll.question,
@@ -76,7 +76,7 @@ def polls(bot, update, user):
 def poll_control_view(bot, update, user, poll):
     """Function for build poll administrator"""
     if poll.author == user:
-        action = 'control' if poll.is_open() else 'close'
+        action = 'control' if poll.is_open else 'close'
         buttons = poll_buttons[action](poll)
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user, 'control'),
@@ -88,7 +88,7 @@ def poll_control_view(bot, update, user, poll):
 
 def poll_vote_view(bot, update, user, poll):
     """Show poll with answer buttons"""
-    if poll.is_open():
+    if poll.is_open:
         bot.send_message(chat_id=update.message.chat_id,
                          text=get_message_text(poll, user),
                          parse_mode=ParseMode.HTML,
@@ -105,7 +105,7 @@ def unknown_command(bot, update, user):
     query = update.message.text
     if '/view_' in query:
         poll_id = query.split('_')[1]
-        poll = db.get_poll(poll_id)
+        poll = DatabaseManager.get_poll(poll_id)
         if poll and poll.author == user:
             poll_control_view(bot, update, user, poll)
             return

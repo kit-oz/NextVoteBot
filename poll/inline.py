@@ -4,7 +4,7 @@ from telegram import ParseMode
 from telegram import InlineQueryResultArticle
 from telegram import InputTextMessageContent
 
-from db import db
+from db.manager import DatabaseManager
 from wrappers import load_user
 
 from .buttons import poll_buttons
@@ -14,11 +14,10 @@ from .message import get_message_text
 @load_user
 def text_received(bot, update, user):
     """Save incoming text messages as poll template"""
-    print('INLINE USER', user, user.id)
     message_text = update.message.text
-    poll_draft = db.get_poll_draft(user)
+    poll_draft = DatabaseManager.get_poll_draft(user)
     if not poll_draft:
-        db.create_poll(user=user, question=message_text)
+        DatabaseManager.create_poll(user=user, question=message_text)
 
         bot.send_message(
             chat_id=update.message.chat_id,
@@ -27,13 +26,13 @@ def text_received(bot, update, user):
         )
         return
 
-    if poll_draft.choices.count() == 0:
+    if len(poll_draft.choices) == 0:
         response_text = "Good. Now send me another answer option."
     else:
         response_text = "Good. Feel free to add more answer options.\n\nWhen you've added enough, " \
                         "simply send /done or press the button below to finish creating the poll."
 
-    db.create_choice(poll=poll_draft, text=message_text)
+    DatabaseManager.create_choice(poll=poll_draft, text=message_text)
     bot.send_message(chat_id=update.message.chat_id,
                      text=response_text)
 
@@ -42,12 +41,9 @@ def text_received(bot, update, user):
 def poll_search(bot, update, user):
     """Inline search polls by ID or question text"""
     query = update.inline_query.query
-    if not query or query == '':
-        poll_list = db.get_user_polls(user)
-    else:
-        poll_list = db.search_poll(user=user, query_text=query)
-    results = list()
+    poll_list = DatabaseManager.get_user_polls(user=user, query_text=query)
 
+    results = list()
     for poll in poll_list:
         message_text = get_message_text(poll, user)
         buttons = poll_buttons['answer'](poll)

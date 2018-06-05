@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from config import MESSAGES
-from db import db
+from db.manager import DatabaseManager
 
 
 def get_chart(poll, show_result=True):
     if show_result:
         choices = [{
             'text': choice.text,
-            'votes': choice.results.count(),
-            'percent': 0 if poll.votes == 0 else 100 * choice.results.count() / poll.votes
+            'votes': len(choice.results),
+            'percent': 0 if poll.votes == 0 else 100 * len(choice.results) / poll.votes
         } for choice in poll.choices]
         choices = sorted(choices, key=lambda x: x['votes'], reverse=True)
         result = ['{} - {}\n{}%'.format(
@@ -18,7 +18,7 @@ def get_chart(poll, show_result=True):
             '{:.0f}'.format(choice['percent'])
         ) for choice in choices]
     else:
-        result = [choice['text'] for choice in poll.choices]
+        result = [choice.text for choice in poll.choices]
 
     return '\n\n'.join(result)
 
@@ -29,7 +29,7 @@ def get_message_text(poll, user, action=''):
         '<b>{}</b>'.format(poll.question),
     ]
 
-    show_result = db.check_show_poll_results(poll, user, action)
+    show_result = DatabaseManager.check_result_visible(poll, user)
 
     chart = get_chart(poll, show_result)
     message_text.append(chart)
@@ -42,7 +42,7 @@ def get_message_text(poll, user, action=''):
     else:
         footer.append(MESSAGES['POLL_FOOTER_VOTES'].format(votes=poll.votes))
 
-    if not poll.is_open():
+    if not poll.is_open:
         footer.append(MESSAGES['POLL_FOOTER_CLOSED'])
     message_text.append(' '.join(footer))
 
