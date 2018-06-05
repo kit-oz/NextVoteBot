@@ -2,8 +2,7 @@
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from config import Config
-from db import db
+from config import RESULT_VISIBLE_MSG
 
 
 def create_inline_menu(buttons):
@@ -12,7 +11,7 @@ def create_inline_menu(buttons):
 
 def main_control_buttons(poll):
     """Basic poll administrator buttons"""
-    if poll.is_open():
+    if poll.is_open:
         return create_inline_menu([
             [{'text': 'Publish poll', 'switch_inline_query': '{}'.format(poll.id)}],
             # TODO the button throws an exception if the result has not changed
@@ -27,11 +26,11 @@ def main_control_buttons(poll):
 
 def settings_buttons(poll):
     """Poll settings menu"""
-    if poll.is_open():
+    if poll.is_open:
         can_change_answer = 'yes' if poll.can_change_answer else 'no'
         return create_inline_menu([
             [{
-                'text': 'Show results: {}'.format(Config.RESULT_VISIBLE_MSG[poll.result_visible]),
+                'text': 'Show results: {}'.format(RESULT_VISIBLE_MSG[poll.result_visible]),
                 'callback_data': 'showresults_{}'.format(poll.id)
             }],
             [{
@@ -44,7 +43,7 @@ def settings_buttons(poll):
 
 def poll_closed_buttons(poll):
     """Buttons for closed polls"""
-    if poll.is_closed():
+    if poll.is_closed:
         return create_inline_menu([
             [
                 {'text': 'Open', 'callback_data': 'open_{}'.format(poll.id)},
@@ -55,7 +54,7 @@ def poll_closed_buttons(poll):
 
 def confirm_delete_buttons(poll):
     """Delete confirmation dialog"""
-    if not poll.is_deleted():
+    if not poll.is_deleted:
         return create_inline_menu([
             [
                 {'text': 'Yes', 'callback_data': 'del_{}'.format(poll.id)},
@@ -66,11 +65,10 @@ def confirm_delete_buttons(poll):
 
 def answers_buttons(poll):
     """Buttons with answers to voting"""
-    if poll.is_open():
-        choice_list = db.get_poll_choices(poll)
+    if poll.is_open:
         return create_inline_menu(
             [[{'text': choice.text, 'callback_data': 'answer_{}_{}'.format(poll.id, choice.id)}]
-             for choice in choice_list]
+             for choice in poll.choices]
         )
 
 

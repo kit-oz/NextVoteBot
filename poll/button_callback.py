@@ -3,7 +3,7 @@
 from telegram import ParseMode
 from telegram.error import BadRequest
 
-from db import db
+from db.manager import DatabaseManager
 from wrappers import load_user
 from .buttons import poll_buttons
 from .message import get_message_text
@@ -24,31 +24,35 @@ def button_callback(bot, update, user):
         edit_message_args['inline_message_id'] = query.inline_message_id
 
     params = query.data.split('_')
-    poll = db.get_poll_by_id(params[1])
+    poll = DatabaseManager.get_poll(params[1])
 
     if not poll:
         edit_message_args['reply_markup'] = ''
-        bot.editMessageReplyMarkup(**edit_message_args)
+        # bot.editMessageReplyMarkup(**edit_message_args)
+        bot.answerCallbackQuery(callback_query_id=query.id, text="You can't vote for this poll")
     else:
         action = params[0]
 
-        if action == 'answer' and poll.is_open():
+        if action == 'answer' and poll.is_open:
             choice_id = params[2]
-            db.save_user_answer(user, poll, choice_id)
-            bot.answerCallbackQuery(callback_query_id=query.id, text='You vote for {}'.format(choice_id))
-        elif user.is_author(poll):
+            vote_result = DatabaseManager.save_user_answer(user, poll, choice_id)
+            bot.answerCallbackQuery(
+                callback_query_id=query.id,
+                text='You vote for {}. {}'.format(choice_id, vote_result)
+            )
+        elif poll.author == user:
             if action == 'showresults':
-                db.toggle_result_visibility(poll)
+                DatabaseManager.toggle_result_visibility(poll)
             elif action == 'changeanswer':
-                db.toggle_can_change_answer(poll)
+                DatabaseManager.toggle_can_change_answer(poll)
             elif action == 'close':
-                db.set_poll_state(poll, poll.CLOSED)
+                DatabaseManager.close_poll(poll)
             elif action == 'open':
-                db.set_poll_state(poll, poll.OPEN)
+                DatabaseManager.open_poll(poll)
             elif action == 'del':
-                db.set_poll_state(poll, poll.DELETED)
+                DatabaseManager.delete_poll(poll)
 
-        if not user.is_author(poll):
+        if poll.author != user:
             action = 'answer'
 
         buttons = poll_buttons[action]
@@ -57,7 +61,6 @@ def button_callback(bot, update, user):
 
         edit_message_args['text'] = get_message_text(poll, user, action)
 
-        print(action)
         try:
             bot.edit_message_text(**edit_message_args)
         except BadRequest:
