@@ -26,7 +26,7 @@ def init_logging(dispatcher):
     dispatcher.add_error_handler(error)
 
 
-def main():
+def run_bot(use_webhook=False):
     db.create_all()
 
     updater = Updater(token=BOT_TOKEN)
@@ -35,13 +35,12 @@ def main():
     init_logging(dispatcher)
     init_handlers(dispatcher)
 
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=PORT,
-                          url_path=BOT_TOKEN)
-    updater.bot.setWebhook("https://{}/{}".format(HOST_NAME, BOT_TOKEN))
+    if use_webhook:
+        updater.start_webhook(listen="0.0.0.0",
+                              port=PORT,
+                              url_path=BOT_TOKEN)
+        updater.bot.setWebhook("https://{}/{}".format(HOST_NAME, BOT_TOKEN))
+    else:
+        updater.start_polling()
+
     updater.idle()
-
-
-if __name__ == '__main__':
-    main()
