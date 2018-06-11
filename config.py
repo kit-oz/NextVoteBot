@@ -28,6 +28,6 @@ MESSAGES = {
     "POLL_FOOTER_CLOSED": "<i>Poll closed.</i>",
     "POLL_FOOTER_NO_VOTES": "👥Nobody voted so far.",
     "POLL_FOOTER_ONE_VOTE": "1 person voted so far.",
-    "POLL_FOOTER_VOTES": "👥👥{votes} people voted so far.",
+    "POLL_FOOTER_VOTES": "{votes} people voted so far.",
     "START": "Let's create a new poll. First, send me the question.",
 }

@@ -29,39 +29,42 @@ def button_callback(bot, update, user):
     if not poll:
         edit_message_args['reply_markup'] = ''
         # bot.editMessageReplyMarkup(**edit_message_args)
-        bot.answerCallbackQuery(callback_query_id=query.id, text="You can't vote for this poll")
-    else:
-        action = params[0]
+        bot.answerCallbackQuery(callback_query_id=query.id, text="Poll not found")
+        return
 
-        if action == 'answer' and poll.is_open:
+    action = params[0]
+
+    if action == 'answer':
+        if poll.is_open:
             choice_id = params[2]
             vote_result = DatabaseManager.save_user_answer(user, poll, choice_id)
-            bot.answerCallbackQuery(
-                callback_query_id=query.id,
-                text='You vote for {}. {}'.format(choice_id, vote_result)
-            )
-        elif poll.author == user:
-            if action == 'showresults':
-                DatabaseManager.toggle_result_visibility(poll)
-            elif action == 'changeanswer':
-                DatabaseManager.toggle_can_change_answer(poll)
-            elif action == 'close':
-                DatabaseManager.close_poll(poll)
-            elif action == 'open':
-                DatabaseManager.open_poll(poll)
-            elif action == 'del':
-                DatabaseManager.delete_poll(poll)
+            bot.answerCallbackQuery(callback_query_id=query.id,
+                                    text='You vote for {}. {}'.format(choice_id, vote_result))
+        else:
+            bot.answerCallbackQuery(callback_query_id=query.id,
+                                    text="You can't vote for this poll")
+    elif poll.author == user:
+        if action == 'showresults':
+            DatabaseManager.toggle_result_visibility(poll)
+        elif action == 'changeanswer':
+            DatabaseManager.toggle_can_change_answer(poll)
+        elif action == 'close':
+            DatabaseManager.close_poll(poll)
+        elif action == 'open':
+            DatabaseManager.open_poll(poll)
+        elif action == 'del':
+            DatabaseManager.delete_poll(poll)
 
-        if poll.author != user:
-            action = 'answer'
+    if poll.author != user:
+        action = 'answer'
 
-        buttons = poll_buttons[action]
-        if buttons:
-            edit_message_args['reply_markup'] = buttons(poll)
+    buttons = poll_buttons[action]
+    if buttons:
+        edit_message_args['reply_markup'] = buttons(poll)
 
-        edit_message_args['text'] = get_message_text(poll, user, action)
+    edit_message_args['text'] = get_message_text(poll, user, action)
 
-        try:
-            bot.edit_message_text(**edit_message_args)
-        except BadRequest:
-            bot.answerCallbackQuery(callback_query_id=query.id, text='Shit happens')
+    try:
+        bot.edit_message_text(**edit_message_args)
+    except BadRequest:
+        bot.answerCallbackQuery(callback_query_id=query.id, text='Shit happens')

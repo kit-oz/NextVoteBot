@@ -35,11 +35,11 @@ def main():
     init_logging(dispatcher)
     init_handlers(dispatcher)
 
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=PORT,
-                          url_path=BOT_TOKEN)
-    updater.bot.setWebhook("https://{}/{}".format(HOST_NAME, BOT_TOKEN))
+    updater.start_polling()
+    # updater.start_webhook(listen="0.0.0.0",
+    #                       port=PORT,
+    #                       url_path=BOT_TOKEN)
+    # updater.bot.setWebhook("https://{}/{}".format(HOST_NAME, BOT_TOKEN))
     updater.idle()
 
 
