@@ -28,15 +28,17 @@ def settings_buttons(poll):
     """Poll settings menu"""
     if poll.is_open:
         can_change_answer = 'yes' if poll.can_change_answer else 'no'
+        show_result = RESULT_VISIBLE_MSG[poll.result_visible]
+
         return create_inline_menu([
             [{
-                'text': 'Show results: {}'.format(RESULT_VISIBLE_MSG[poll.result_visible]),
+                'text': 'Show results: {}'.format(show_result),
                 'callback_data': 'showresults_{}'.format(poll.id)
             }],
-            [{
-                'text': 'Can change answer: {}'.format(can_change_answer),
-                'callback_data': 'changeanswer_{}'.format(poll.id)
-            }],
+            # [{
+            #     'text': 'Can change answer: {}'.format(can_change_answer),
+            #     'callback_data': 'changeanswer_{}'.format(poll.id)
+            # }],
             [{'text': 'Back to poll', 'callback_data': 'control_{}'.format(poll.id)}],
         ])
 

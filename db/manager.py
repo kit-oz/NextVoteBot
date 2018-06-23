@@ -136,17 +136,18 @@ class DatabaseManager:
         return poll_draft
 
     @staticmethod
-    def get_user(user_id):
+    def get_user(user_id, user_name=''):
         """Get user by his Telegram ID
 
         Create new user if no one found
 
         Args:
-            user_id: Telegram User ID
+            user_id: Telegram User's ID
+            user_name: Telegram User‘s username
         """
         user = db.query(User).get(user_id)
         if not user:
-            user = User(id=user_id)
+            user = User(id=user_id, name=user_name)
             db.add(user)
             db.commit()
         return user

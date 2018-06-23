@@ -12,7 +12,7 @@ class Choice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(250))
 
-    poll_id = db.Column(db.Integer, db.ForeignKey('poll.id'))
+    poll_id = db.Column(db.String, db.ForeignKey('poll.id'))
 
     results = db.relationship(Result, backref='choice', cascade="delete, delete-orphan")
 

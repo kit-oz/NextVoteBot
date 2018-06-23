@@ -17,20 +17,20 @@ def get_chart(poll, user, show_result=True):
         } for choice in poll.choices]
         choices = sorted(choices, key=lambda x: x['votes'], reverse=True)
 
-        result = ['{text} - {votes}{user_choice}\n{likes} {percent:.0f}%'.format(
+        result = ['{state} {text} - {votes}\n{likes} {percent:.0f}%'.format(
+            state='&#128505;' if choice['user_choice'] else '&#9744;',
             text=choice['text'],
             votes=choice['votes'],
-            user_choice=' (your choice)' if choice['user_choice'] else '',
-            likes='▫' if choice['likes'] == 0 else '👍️' * choice['likes'],
+            likes='&#9643;' if choice['likes'] == 0 else '&#128077;️' * choice['likes'],
             percent=choice['percent']
         ) for choice in choices]
+        return '\n\n'.join(result)
     else:
-        result = ['{text}{user_choice}'.format(
+        result = ['{state} {text}'.format(
+            state='&#128505;' if choice.is_user_choice(user) else '&#9744;',
             text=choice.text,
-            user_choice=' (your choice)' if choice.is_user_choice(user) else ''
         ) for choice in poll.choices]
-
-    return '\n\n'.join(result)
+        return '\n'.join(result)
 
 
 def get_message_text(poll, user, action=''):

@@ -32,7 +32,7 @@ def load_user(func):
             if from_user.is_bot:
                 return
 
-            user = DatabaseManager.get_user(from_user.id)
+            user = DatabaseManager.get_user(from_user.id, from_user.username)
             if user:
                 return func(bot, update, user, *args, **kwargs)
     return wrapper
