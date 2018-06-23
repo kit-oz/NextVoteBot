@@ -111,6 +111,21 @@ class DatabaseManager:
         db.commit()
 
     @staticmethod
+    def get_choices_count():
+        """Get total count of created choices to created polls"""
+        choices_count = db.query(Choice) \
+            .join(Choice.poll) \
+            .filter(Poll.state > Poll.DRAFT) \
+            .count()
+        return choices_count
+
+    @staticmethod
+    def get_created_polls_count():
+        """Get total count of created polls"""
+        polls_created = db.query(Poll).filter(Poll.state > Poll.DRAFT).count()
+        return polls_created
+
+    @staticmethod
     def get_poll(poll_id):
         """Get poll by ID
 
@@ -134,6 +149,12 @@ class DatabaseManager:
         """
         poll_draft = db.query(Poll).filter_by(author_id=author.id, state=Poll.DRAFT).first()
         return poll_draft
+
+    @staticmethod
+    def get_results_count():
+        """Get total count of created polls"""
+        results_count = db.query(Result).count()
+        return results_count
 
     @staticmethod
     def get_user(user_id, user_name=''):
@@ -203,6 +224,12 @@ class DatabaseManager:
         query = query.paginate(page=page, per_page=per_page)
 
         return query
+
+    @staticmethod
+    def get_authors_count():
+        """Get total count of users with polls created"""
+        authors_count = db.query(Poll.author_id).group_by(Poll.author_id).count()
+        return authors_count
 
     @staticmethod
     def open_poll(poll):

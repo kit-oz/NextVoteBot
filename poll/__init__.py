@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from telegram.ext import Filters
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, InlineQueryHandler
 
+from .admin_commands import show_stat
 from .inline import text_received
 from .button_callback import button_callback
 from .inline import poll_search
@@ -11,11 +12,16 @@ from .commands import show_help, start, done, polls, unknown_command, non_text_r
 
 
 def init_handlers(dispatcher):
+    # Public commands
     dispatcher.add_handler(CommandHandler('help', show_help))
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('done', done))
     dispatcher.add_handler(CommandHandler('polls', polls))
 
+    # Admin commands
+    dispatcher.add_handler(CommandHandler('stat', show_stat))
+
+    # Other
     dispatcher.add_handler(MessageHandler(Filters.text, text_received))
     dispatcher.add_handler(CallbackQueryHandler(button_callback))
 
