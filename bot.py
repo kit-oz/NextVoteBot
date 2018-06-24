@@ -8,7 +8,6 @@ from config import ADMIN_USER
 from config import BOT_TOKEN
 from config import HOST_NAME
 from config import PORT
-from db.common import db
 from poll import init_handlers
 
 
@@ -27,8 +26,6 @@ def init_logging(dispatcher):
 
 
 def run_bot(use_webhook=False):
-    db.create_all()
-
     updater = Updater(token=BOT_TOKEN)
     dispatcher = updater.dispatcher
 

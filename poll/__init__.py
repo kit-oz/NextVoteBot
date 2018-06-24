@@ -2,13 +2,22 @@
 
 from __future__ import absolute_import
 from telegram.ext import Filters
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, InlineQueryHandler
+from telegram.ext import CommandHandler
+from telegram.ext import MessageHandler
+from telegram.ext import CallbackQueryHandler
+from telegram.ext import InlineQueryHandler
 
+from .admin_commands import create_db
 from .admin_commands import show_stat
-from .inline import text_received
 from .button_callback import button_callback
+from .commands import done
+from .commands import non_text_received
+from .commands import polls
+from .commands import show_help
+from .commands import start
+from .commands import unknown_command
+from .inline import text_received
 from .inline import poll_search
-from .commands import show_help, start, done, polls, unknown_command, non_text_received
 
 
 def init_handlers(dispatcher):
@@ -20,6 +29,7 @@ def init_handlers(dispatcher):
 
     # Admin commands
     dispatcher.add_handler(CommandHandler('stat', show_stat))
+    dispatcher.add_handler(CommandHandler('create_db', create_db))
 
     # Other
     dispatcher.add_handler(MessageHandler(Filters.text, text_received))
