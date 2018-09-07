@@ -17,7 +17,7 @@ from .commands import show_help
 from .commands import start
 from .commands import unknown_command
 from .inline import text_received
-from .inline import poll_search
+from .inline import inline_query
 
 
 def init_handlers(dispatcher):
@@ -35,7 +35,7 @@ def init_handlers(dispatcher):
     dispatcher.add_handler(MessageHandler(Filters.text, text_received))
     dispatcher.add_handler(CallbackQueryHandler(button_callback))
 
-    dispatcher.add_handler(InlineQueryHandler(poll_search))
+    dispatcher.add_handler(InlineQueryHandler(inline_query))
 
     dispatcher.add_handler(MessageHandler(Filters.command, unknown_command))
     dispatcher.add_handler(MessageHandler((~ Filters.text), non_text_received))

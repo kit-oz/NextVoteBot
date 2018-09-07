@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import json
+from uuid import uuid4
+
 from telegram import ParseMode
 from telegram import InlineQueryResultArticle
 from telegram import InputTextMessageContent
 
+from config import MESSAGES
 from db.manager import DatabaseManager
 from wrappers import load_user
 
@@ -38,22 +42,33 @@ def text_received(bot, update, user):
 
 
 @load_user
-def poll_search(bot, update, user):
+def inline_query(bot, update, user):
     """Inline search polls by ID or question text"""
-    query = update.inline_query.query
-    poll_list = DatabaseManager.get_user_polls(user=user, query_text=query)
+    answer = {
+        'results': [],
+        'is_personal': True,
+        'cache_time': 3
+    }
 
-    results = list()
-    for poll in poll_list:
-        message_text = get_message_text(poll, user)
-        buttons = poll_buttons['answer'](poll)
-        results.append(
-            InlineQueryResultArticle(
-                id=poll.id,
-                title=poll.question,
-                input_message_content=InputTextMessageContent(message_text=message_text,
-                                                              parse_mode=ParseMode.HTML),
-                reply_markup=buttons
+    query = update.inline_query.query
+
+    if query:
+        poll_list = DatabaseManager.get_user_polls(user=user, query_text=query)
+        for poll in poll_list:
+            message_text = get_message_text(poll, user)
+            buttons = poll_buttons['answer'](poll)
+            answer['results'].append(
+                InlineQueryResultArticle(
+                    id=poll.id,
+                    title=poll.question,
+                    input_message_content=InputTextMessageContent(message_text=message_text,
+                                                                  parse_mode=ParseMode.HTML),
+                    reply_markup=buttons
+                )
             )
-        )
-    bot.answer_inline_query(update.inline_query.id, results)
+
+    if len(answer['results']) == 0:
+        answer['switch_pm_text'] = MESSAGES['CREATE_NEW_POLL']
+        answer['switch_pm_parameter'] = '1'
+
+    update.inline_query.answer(**answer)

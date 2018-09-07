@@ -13,6 +13,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///app.db")
 RESULT_VISIBLE_MSG = ["never", "after answer", "always"]
 
 MESSAGES = {
+    "CREATE_NEW_POLL": "Создать новый опрос",
     "ERROR_NO_CHOICES": "Sorry, a poll needs to have a question and at least one answer option to work.\n"
                         "Please send me the first answer option.",
     "ERROR_NOT_TEXT": "Sorry, I only support text and emoji for questions and answers.",
