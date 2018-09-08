@@ -8,7 +8,7 @@ from config import ADMIN_USER
 from config import BOT_TOKEN
 from config import HOST_NAME
 from config import PORT
-from poll import init_handlers
+from poll_bot import init_handlers
 
 
 def init_logging(dispatcher):

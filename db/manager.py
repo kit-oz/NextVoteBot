@@ -31,7 +31,7 @@ class DatabaseManager:
 
         user_choice = DatabaseManager.get_user_choice(user=user, poll=poll)
 
-        if user_choice:
+        if user_choice and poll.result_visible == Poll.RESULT_VISIBLE_AFTER_ANSWER:
             return True
 
         return False
@@ -157,20 +157,34 @@ class DatabaseManager:
         return results_count
 
     @staticmethod
-    def get_user(user_id, user_name=''):
+    def get_user(telegram_user):
         """Get user by his Telegram ID
 
         Create new user if no one found
 
         Args:
-            user_id: Telegram User's ID
-            user_name: Telegram User‘s username
+            telegram_user: Telegram User object
         """
-        user = db.query(User).get(user_id)
-        if not user:
-            user = User(id=user_id, name=user_name)
+        need_update = False
+
+        user = db.query(User).get(telegram_user.id)
+        if user:
+            if user.name != telegram_user.username:
+                user.name = telegram_user.username
+                need_update = True
+            if user.language_code != telegram_user.language_code:
+                user.language_code = telegram_user.language_code
+                need_update = True
+        else:
+            user = User(id=telegram_user.id,
+                        name=telegram_user.username,
+                        language_code=telegram_user.language_code)
+            need_update = True
+
+        if need_update:
             db.add(user)
             db.commit()
+
         return user
 
     @staticmethod
@@ -184,13 +198,13 @@ class DatabaseManager:
         Returns:
             result: instance of a class Result
         """
-        choice = db.query(Choice) \
-            .join(Choice.results) \
+        user_result = db.query(Result) \
+            .join(Result.choice) \
             .filter(Choice.poll_id == poll.id) \
             .filter(Result.user_id == user.id) \
-            .all()
+            .first()
 
-        return choice
+        return user_result
 
     @staticmethod
     def get_user_polls(user, page=1, per_page=5, with_closed=False, query_text=''):
@@ -213,7 +227,7 @@ class DatabaseManager:
         if with_closed:
             query = query.filter(Poll.state != Poll.DELETED)
         else:
-            query = query.filter(Poll.state == Poll.OPEN)
+            query = query.filter(Poll.state == Poll.OPEN or Poll.state == Poll.UNPUBLISHED)
 
         if query_text:
             query = query.filter(or_(
@@ -232,6 +246,22 @@ class DatabaseManager:
         return authors_count
 
     @staticmethod
+    def save_draft_poll(poll):
+        """Change state for the poll from draft to unpublish
+
+        Args:
+            poll: instance of a class Poll
+
+        Returns:
+            None
+        """
+        poll.state = Poll.UNPUBLISHED
+        db.add(poll)
+        db.commit()
+
+        return poll
+
+    @staticmethod
     def open_poll(poll):
         """Change state for the poll to open
 
@@ -246,41 +276,48 @@ class DatabaseManager:
         db.commit()
 
     @staticmethod
-    def save_user_answer(user, poll, choice_id):
+    def update_user_answer(user_choice, new_choice):
+        """"""
+        user_choice.choice = new_choice
+        db.add(user_choice)
+        db.commit()
+
+        return True
+
+    @staticmethod
+    def delete_user_choice(user_choice):
+        """"""
+        db.delete(user_choice)
+        db.commit()
+        return True
+
+    @staticmethod
+    def get_choice(choice_id):
+        choice = db.query(Choice).get(choice_id)
+
+        return choice
+
+    @staticmethod
+    def save_user_choice(poll, user, choice):
         """Verify that the user can vote and save his response
 
         Args:
-            user: instance of a class User
             poll: instance of a class Poll
+            user: instance of a class User
             choice_id: ID of the selected answer
 
         Returns:
             Vote result
         """
-        choice = db.query(Choice).get(choice_id)
-        if choice.poll_id != poll.id:
-            return 'error'
 
-        result = db.query(Result).join(Result.choice) \
-            .filter(Result.user_id == user.id) \
-            .filter(Choice.poll_id == poll.id) \
-            .first()
+        user_choice = DatabaseManager.get_user_choice(user=user, poll=poll)
+        if user_choice:
+            return False
 
-        if not result:
-            result = Result(user=user, choice=choice)
-            db.add(result)
-            db.commit()
-            return 'vote'
-
-        if result.choice == choice:
-            db.delete(result)
-            db.commit()
-            return 'took'
-
-        result.choice = choice
+        result = Result(user=user, choice=choice)
         db.add(result)
         db.commit()
-        return 'change'
+        return True
 
     @staticmethod
     def toggle_can_change_answer(poll):

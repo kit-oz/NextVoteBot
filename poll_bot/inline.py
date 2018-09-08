@@ -11,7 +11,7 @@ from config import MESSAGES
 from db.manager import DatabaseManager
 from wrappers import load_user
 
-from .buttons import poll_buttons
+from .buttons import get_answers_buttons
 from .message import get_message_text
 
 
@@ -44,20 +44,14 @@ def text_received(bot, update, user):
 @load_user
 def inline_query(bot, update, user):
     """Inline search polls by ID or question text"""
-    answer = {
-        'results': [],
-        'is_personal': True,
-        'switch_pm_text': MESSAGES['CREATE_NEW_POLL'],
-        'switch_pm_parameter': '1'
-    }
-
-    query = update.inline_query.query
-
+    query = html.escape(update.inline_query.query)
     poll_list = DatabaseManager.get_user_polls(user=user, query_text=query)
+
+    results = []
     for poll in poll_list:
         message_text = get_message_text(poll, user)
-        buttons = poll_buttons['answer'](poll)
-        answer['results'].append(
+        buttons = get_answers_buttons(poll)
+        results.append(
             InlineQueryResultArticle(
                 id=uuid4(),
                 title=html.unescape(poll.question),
@@ -67,4 +61,8 @@ def inline_query(bot, update, user):
             )
         )
 
-    update.inline_query.answer(**answer)
+    bot.answer_inline_query(update.inline_query.id,
+                            results,
+                            is_personal=True,
+                            switch_pm_text=MESSAGES['CREATE_NEW_POLL'],
+                            switch_pm_parameter='1')

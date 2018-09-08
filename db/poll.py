@@ -20,6 +20,7 @@ class Poll(db.Model):
     OPEN = 1
     CLOSED = 2
     DELETED = 3
+    UNPUBLISHED = 4
 
     # Results visibility options
     RESULT_VISIBLE_NEVER = 0
@@ -53,6 +54,14 @@ class Poll(db.Model):
         self.question = question
 
     @hybrid_property
+    def is_open(self):
+        return self.state == self.OPEN
+
+    @hybrid_property
+    def is_unpublished(self):
+        return self.state == self.UNPUBLISHED
+
+    @hybrid_property
     def is_closed(self):
         return self.state == self.CLOSED
 
@@ -61,9 +70,5 @@ class Poll(db.Model):
         return self.state == self.DELETED
 
     @hybrid_property
-    def is_open(self):
-        return self.state == self.OPEN
-
-    @hybrid_property
     def votes(self):
-        return sum(len(choice.results) for choice in self.choices)
+        return sum(choice.votes for choice in self.choices)

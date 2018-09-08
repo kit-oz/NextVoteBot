@@ -2,12 +2,13 @@
 
 from __future__ import absolute_import
 
+import html
 from telegram import ParseMode
 
 from config import MESSAGES
 from db.manager import DatabaseManager
 from wrappers import load_user
-from .buttons import poll_buttons
+from .buttons import get_admin_buttons
 from .message import get_message_text
 
 
@@ -25,29 +26,12 @@ def done(bot, update, user):
                          parse_mode=ParseMode.HTML)
         return
 
-    DatabaseManager.open_poll(poll_draft)
+    DatabaseManager.save_draft_poll(poll_draft)
 
     bot.send_message(chat_id=update.message.chat_id,
                      text=MESSAGES['POLL_CREATED'],
                      parse_mode=ParseMode.HTML)
-    poll_control_view(bot, update, user, poll_draft)
-
-
-def show_help(bot, update):
-    """Callback function for the /help command"""
-    bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['HELP'],
-                     parse_mode=ParseMode.HTML)
-
-
-@load_user
-def start(bot, update, user):
-    """Callback function for the /start command"""
-    DatabaseManager.delete_draft_poll(user)
-
-    bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['START'],
-                     parse_mode=ParseMode.HTML)
+    poll_admin_view(bot, update, user, poll_draft)
 
 
 @load_user
@@ -77,41 +61,43 @@ def polls(bot, update, user):
                      parse_mode=ParseMode.HTML)
 
 
-def poll_control_view(bot, update, user, poll):
+def poll_admin_view(bot, update, user, poll):
     """Function for build poll administrator"""
-    if poll.author == user:
-        action = 'control' if poll.is_open else 'close'
-        buttons = poll_buttons[action](poll)
-        bot.send_message(chat_id=update.message.chat_id,
-                         text=get_message_text(poll, user, 'control'),
-                         parse_mode=ParseMode.HTML,
-                         reply_markup=buttons)
-    else:
-        poll_vote_view(bot, update, user, poll)
+    message_text = get_message_text(poll, user, action='admin')
+    message_buttons = get_admin_buttons(poll)
+
+    bot.send_message(chat_id=update.message.chat_id,
+                     text=message_text,
+                     parse_mode=ParseMode.HTML,
+                     reply_markup=message_buttons)
 
 
-def poll_vote_view(bot, update, user, poll):
-    """Show poll with answer buttons"""
-    if poll.is_open:
-        bot.send_message(chat_id=update.message.chat_id,
-                         text=get_message_text(poll, user),
-                         parse_mode=ParseMode.HTML,
-                         reply_markup=poll_buttons['answer'](poll))
-    else:
-        bot.send_message(chat_id=update.message.chat_id,
-                         text=get_message_text(poll, user),
-                         parse_mode=ParseMode.HTML)
+def show_help(bot, update):
+    """Callback function for the /help command"""
+    bot.send_message(chat_id=update.message.chat_id,
+                     text=MESSAGES['HELP'],
+                     parse_mode=ParseMode.HTML)
+
+
+@load_user
+def start(bot, update, user):
+    """Callback function for the /start command"""
+    DatabaseManager.delete_draft_poll(user)
+
+    bot.send_message(chat_id=update.message.chat_id,
+                     text=MESSAGES['START'],
+                     parse_mode=ParseMode.HTML)
 
 
 @load_user
 def unknown_command(bot, update, user):
     """Callback for other commands"""
-    query = update.message.text
+    query = html.escape(update.message.text)
     if '/view_' in query:
         poll_id = query.split('_')[1]
         poll = DatabaseManager.get_poll(poll_id)
         if poll and poll.author == user:
-            poll_control_view(bot, update, user, poll)
+            poll_admin_view(bot, update, user, poll)
             return
     bot.send_message(chat_id=update.message.chat_id,
                      text=MESSAGES['ERROR_UNKNOWN_COMMAND'],

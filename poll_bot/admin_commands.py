@@ -8,6 +8,11 @@ from wrappers import admin_only
 
 
 @admin_only
+def admin(bot, update):
+    """Show admin panel"""
+
+
+@admin_only
 def show_stat(bot, update):
     """Show bot usage statistic"""
     authors_count = DatabaseManager.get_authors_count()

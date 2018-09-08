@@ -24,11 +24,12 @@ MESSAGES = {
     "POLL_CREATED": "&#128077; Poll created. You can now publish it to a group or send it to your friends "
                     "in a private message. To do this, tap the button below or start your message "
                     "in any other chat with @NextVoteBot and select one of your polls to send.",
-    "POLL_DELETE_ALERT": "\n<b>Deleting a poll with permanently remove it from your inline suggestions "
+    "POLL_DELETE_ALERT": "<b>Deleting a poll with permanently remove it from your inline suggestions "
                          "and bot settings. It will appear closed to all other users.\n\nDelete poll?</b>",
     "POLL_FOOTER_CLOSED": "<i>Poll closed.</i>",
     "POLL_FOOTER_NO_VOTES": "&#128101; Nobody voted so far.",
     "POLL_FOOTER_ONE_VOTE": "&#128101; 1 person voted so far.",
     "POLL_FOOTER_VOTES": "&#128101; {votes} people voted so far.",
+    "PUBLICATION_WARNING": "<b>Warning!</> After you publish a poll, you will not be able to change its settings.",
     "START": "Let's create a new poll. First, send me the question.",
 }
