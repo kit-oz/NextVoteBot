@@ -47,28 +47,25 @@ def inline_query(bot, update, user):
     answer = {
         'results': [],
         'is_personal': True,
-        'cache_time': 3
+        'switch_pm_text': MESSAGES['CREATE_NEW_POLL'],
+        'switch_pm_parameter': '1'
     }
 
     query = update.inline_query.query
 
-    if query:
-        poll_list = DatabaseManager.get_user_polls(user=user, query_text=query)
-        for poll in poll_list:
-            message_text = get_message_text(poll, user)
-            buttons = poll_buttons['answer'](poll)
-            answer['results'].append(
-                InlineQueryResultArticle(
-                    id=poll.id,
-                    title=poll.question,
-                    input_message_content=InputTextMessageContent(message_text=message_text,
-                                                                  parse_mode=ParseMode.HTML),
-                    reply_markup=buttons
-                )
+    poll_list = DatabaseManager.get_user_polls(user=user, query_text=query)
+    for poll in poll_list:
+        message_text = get_message_text(poll, user)
+        buttons = poll_buttons['answer'](poll)
+        answer['results'].append(
+            InlineQueryResultArticle(
+                id=poll.id,
+                title=poll.question,
+                input_message_content=InputTextMessageContent(message_text=message_text,
+                                                              parse_mode=ParseMode.HTML),
+                reply_markup=buttons
             )
+        )
 
-    if len(answer['results']) == 0:
-        answer['switch_pm_text'] = MESSAGES['CREATE_NEW_POLL']
-        answer['switch_pm_parameter'] = '1'
 
     update.inline_query.answer(**answer)
