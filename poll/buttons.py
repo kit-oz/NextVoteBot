@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import html
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import RESULT_VISIBLE_MSG
@@ -69,7 +70,7 @@ def answers_buttons(poll):
     """Buttons with answers to voting"""
     if poll.is_open:
         return create_inline_menu(
-            [[{'text': choice.text, 'callback_data': 'answer_{}_{}'.format(poll.id, choice.id)}]
+            [[{'text': html.unescape(choice.text), 'callback_data': 'answer_{}_{}'.format(poll.id, choice.id)}]
              for choice in poll.choices]
         )
 

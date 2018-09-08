@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json
+import html
 from uuid import uuid4
 
 from telegram import ParseMode
@@ -18,7 +18,7 @@ from .message import get_message_text
 @load_user
 def text_received(bot, update, user):
     """Save incoming text messages as poll template"""
-    message_text = update.message.text
+    message_text = html.escape(update.message.text)
     poll_draft = DatabaseManager.get_poll_draft(user)
     if not poll_draft:
         DatabaseManager.create_poll(user=user, question=message_text)
@@ -59,13 +59,12 @@ def inline_query(bot, update, user):
         buttons = poll_buttons['answer'](poll)
         answer['results'].append(
             InlineQueryResultArticle(
-                id=poll.id,
-                title=poll.question,
+                id=uuid4(),
+                title=html.unescape(poll.question),
                 input_message_content=InputTextMessageContent(message_text=message_text,
                                                               parse_mode=ParseMode.HTML),
                 reply_markup=buttons
             )
         )
-
 
     update.inline_query.answer(**answer)

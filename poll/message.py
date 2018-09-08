@@ -18,7 +18,7 @@ def get_chart(poll, user, show_result=True):
         choices = sorted(choices, key=lambda x: x['votes'], reverse=True)
 
         result = ['{state} {text} - {votes}\n{likes} {percent:.0f}%'.format(
-            state='&#128505;' if choice['user_choice'] else '&#9744;',
+            state='&#9642;' if choice['user_choice'] else '&#9643;',
             text=choice['text'],
             votes=choice['votes'],
             likes='&#9643;' if choice['likes'] == 0 else '&#128077;️' * choice['likes'],
@@ -27,7 +27,7 @@ def get_chart(poll, user, show_result=True):
         return '\n\n'.join(result)
     else:
         result = ['{state} {text}'.format(
-            state='&#128505;' if choice.is_user_choice(user) else '&#9744;',
+            state='&#9642;' if choice.is_user_choice(user) else '&#9643;',
             text=choice.text,
         ) for choice in poll.choices]
         return '\n'.join(result)

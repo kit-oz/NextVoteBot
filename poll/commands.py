@@ -21,20 +21,23 @@ def done(bot, update, user):
 
     if len(poll_draft.choices) == 0:
         bot.send_message(chat_id=update.message.chat_id,
-                         text=MESSAGES['ERROR_NO_CHOICES'])
+                         text=MESSAGES['ERROR_NO_CHOICES'],
+                         parse_mode=ParseMode.HTML)
         return
 
     DatabaseManager.open_poll(poll_draft)
 
     bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['POLL_CREATED'])
+                     text=MESSAGES['POLL_CREATED'],
+                     parse_mode=ParseMode.HTML)
     poll_control_view(bot, update, user, poll_draft)
 
 
 def show_help(bot, update):
     """Callback function for the /help command"""
     bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['HELP'])
+                     text=MESSAGES['HELP'],
+                     parse_mode=ParseMode.HTML)
 
 
 @load_user
@@ -43,7 +46,8 @@ def start(bot, update, user):
     DatabaseManager.delete_draft_poll(user)
 
     bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['START'])
+                     text=MESSAGES['START'],
+                     parse_mode=ParseMode.HTML)
 
 
 @load_user
@@ -110,10 +114,12 @@ def unknown_command(bot, update, user):
             poll_control_view(bot, update, user, poll)
             return
     bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['ERROR_UNKNOWN_COMMAND'])
+                     text=MESSAGES['ERROR_UNKNOWN_COMMAND'],
+                     parse_mode=ParseMode.HTML)
 
 
 def non_text_received(bot, update):
     """Callback on receiving non text message (image, sticker, etc.)"""
     bot.send_message(chat_id=update.message.chat_id,
-                     text=MESSAGES['ERROR_NOT_TEXT'])
+                     text=MESSAGES['ERROR_NOT_TEXT'],
+                     parse_mode=ParseMode.HTML)
