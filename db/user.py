@@ -14,7 +14,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     name = db.Column(db.String)
-    language_code = db.Column(db.String)
+    # language_code = db.Column(db.String)
 
     polls = db.relationship(Poll, backref='author', cascade="delete, delete-orphan")
     votes = db.relationship(Result, backref='user')
