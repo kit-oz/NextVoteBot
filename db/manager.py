@@ -172,9 +172,9 @@ class DatabaseManager:
             if user.name != telegram_user.username:
                 user.name = telegram_user.username
                 need_update = True
-            if user.language_code != telegram_user.language_code:
-                user.language_code = telegram_user.language_code
-                need_update = True
+            # if user.language_code != telegram_user.language_code:
+            #     user.language_code = telegram_user.language_code
+            #     need_update = True
         else:
             user = User(id=telegram_user.id,
                         name=telegram_user.username,
