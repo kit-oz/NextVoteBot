@@ -17,7 +17,7 @@ def get_admin_buttons(poll):
         [{'text': 'Publish poll', 'switch_inline_query': '{}'.format(poll.id)}],
     ]
 
-    if poll.is_unpublished:
+    if poll.votes == 0:
         buttons.append([{'text': 'Poll settings', 'callback_data': 'settings_{}'.format(poll.id)}])
     else:
         buttons.append([{'text': 'Update results', 'callback_data': 'update_{}'.format(poll.id)}])

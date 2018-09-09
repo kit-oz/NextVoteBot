@@ -13,14 +13,12 @@ from .message import get_message_text
 
 def vote_for_poll(bot, update, user, poll, choice_id):
     """"""
-    callback_text = MESSAGES["VOTE_ERROR"]
-
     choice = DatabaseManager.get_choice(choice_id)
     user_choice = DatabaseManager.get_user_choice(user=user, poll=poll)
 
     if choice.poll_id != poll.id:
         save_success = False
-    elif not poll.is_open and not poll.is_unpublished:
+    elif not poll.is_open:
         save_success = True
         callback_text = MESSAGES["VOTE_POLL_CLOSED"]
     elif not user_choice:
@@ -36,18 +34,17 @@ def vote_for_poll(bot, update, user, poll, choice_id):
         save_success = DatabaseManager.update_user_answer(user_choice, choice)
         callback_text = MESSAGES["VOTE_CHANGE_ANSWER"].format(choice.text)
 
-    if save_success:
-        if poll.is_unpublished:
-            DatabaseManager.open_poll(poll)
+    if not save_success:
+        callback_text = MESSAGES["VOTE_ERROR"]
 
     bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                             text=callback_text)
 
 
 def update_poll_settings(poll, action):
-    if action == 'showresults' and poll.is_unpublished:
+    if action == 'showresults' and poll.votes == 0:
         DatabaseManager.toggle_result_visibility(poll)
-    elif action == 'changeanswer' and poll.is_unpublished:
+    elif action == 'changeanswer' and poll.votes == 0:
         DatabaseManager.toggle_can_change_answer(poll)
     elif action == 'close':
         DatabaseManager.close_poll(poll)
@@ -71,11 +68,13 @@ def update_poll_message(bot, update, user, poll, action):
 
     if poll.author != user:
         action = 'answer'
+    elif action == 'open':
+        action = 'admin'
     elif action == 'update':
         action = 'admin'
         bot.answerCallbackQuery(callback_query_id=update.callback_query.id,
                                 text='Results updated')
-    elif poll.is_open and action in ('settings', 'changeanswer', 'showresults'):
+    elif poll.votes > 0 and action in ('settings', 'changeanswer', 'showresults'):
         action = 'admin'
     elif poll.is_closed and action == 'admin':
         action = 'close'

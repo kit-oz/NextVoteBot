@@ -21,7 +21,7 @@ class User(db.Model):
 
     @hybrid_property
     def opened_polls(self):
-        return [poll for poll in self.polls if poll.is_open or poll.is_unpublished]
+        return [poll for poll in self.polls if poll.is_open]
 
     @hybrid_property
     def closed_polls(self):

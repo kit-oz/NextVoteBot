@@ -26,7 +26,7 @@ def done(bot, update, user):
                          parse_mode=ParseMode.HTML)
         return
 
-    DatabaseManager.save_draft_poll(poll_draft)
+    DatabaseManager.open_poll(poll_draft)
 
     bot.send_message(chat_id=update.message.chat_id,
                      text=MESSAGES['POLL_CREATED'],

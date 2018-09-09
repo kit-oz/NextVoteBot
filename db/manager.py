@@ -231,12 +231,12 @@ class DatabaseManager:
             .filter(Poll.state != Poll.DRAFT)
 
         if with_closed:
-            query = query.filter(Poll.state != Poll.DELETED)
-        else:
             query = query.filter(or_(
                 Poll.state == Poll.OPEN,
-                Poll.state == Poll.UNPUBLISHED
+                Poll.state == Poll.CLOSED
             ))
+        else:
+            query = query.filter(Poll.state == Poll.OPEN)
 
         if query_text:
             query = query.filter(or_(
@@ -253,22 +253,6 @@ class DatabaseManager:
         """Get total count of users with polls created"""
         authors_count = db.query(Poll.author_id).group_by(Poll.author_id).count()
         return authors_count
-
-    @staticmethod
-    def save_draft_poll(poll):
-        """Change state for the poll from draft to unpublish
-
-        Args:
-            poll: instance of a class Poll
-
-        Returns:
-            None
-        """
-        poll.state = Poll.UNPUBLISHED
-        db.add(poll)
-        db.commit()
-
-        return poll
 
     @staticmethod
     def open_poll(poll):

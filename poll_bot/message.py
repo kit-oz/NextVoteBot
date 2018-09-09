@@ -58,7 +58,7 @@ def get_message_text(poll, user, action='answer'):
 
     if action == 'delete':
         message_text.append(MESSAGES['POLL_DELETE_ALERT'])
-    elif poll.is_unpublished and action == 'admin':
+    elif action == 'admin' and poll.votes == 0:
         message_text.append(MESSAGES['PUBLICATION_WARNING'])
     elif poll.is_closed or poll.is_deleted:
         message_text.append(MESSAGES['POLL_FOOTER_CLOSED'])

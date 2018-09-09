@@ -13,7 +13,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///app.db")
 RESULT_VISIBLE_MSG = ["never", "after answer", "always"]
 
 MESSAGES = {
-    "CANT_CHANGE_ANSWER": "You can not change answer after voting",
+    "CANT_CHANGE_ANSWER": "<b>You can answer only once</b>",
     "CREATE_NEW_POLL": "Create new poll",
     "ERROR_NO_CHOICES": "Sorry, a poll needs to have a question and at least one answer option to work.\n"
                         "Please send me the first answer option.",
@@ -31,7 +31,8 @@ MESSAGES = {
     "POLL_FOOTER_NO_VOTES": "&#128101; Nobody voted so far.",
     "POLL_FOOTER_ONE_VOTE": "&#128101; 1 person voted so far.",
     "POLL_FOOTER_VOTES": "&#128101; {votes} people voted so far.",
-    "PUBLICATION_WARNING": "<b>Warning!</> After you publish a poll, you will not be able to change its settings.",
+    "PUBLICATION_WARNING": "<i>Warning!\n"
+                           "You will not be able to change the voting settings after the first answer.</i>",
     "START": "Let's create a new poll. First, send me the question.",
     "VOTE_ERROR": "An error has occurred. Please try again.",
     "VOTE_TOOK": "You took your vote back.",

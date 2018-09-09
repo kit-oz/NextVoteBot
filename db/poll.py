@@ -20,7 +20,6 @@ class Poll(db.Model):
     OPEN = 1
     CLOSED = 2
     DELETED = 3
-    UNPUBLISHED = 4
 
     # Results visibility options
     RESULT_VISIBLE_NEVER = 0
@@ -35,7 +34,7 @@ class Poll(db.Model):
 
     state = db.Column(db.Integer, default=DRAFT)
     result_visible = db.Column(db.Integer, default=RESULT_VISIBLE_AFTER_ANSWER)
-    can_change_answer = db.Column(db.Boolean, default=True)
+    can_change_answer = db.Column(db.Boolean, default=False)
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -56,10 +55,6 @@ class Poll(db.Model):
     @hybrid_property
     def is_open(self):
         return self.state == self.OPEN
-
-    @hybrid_property
-    def is_unpublished(self):
-        return self.state == self.UNPUBLISHED
 
     @hybrid_property
     def is_closed(self):
