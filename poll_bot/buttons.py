@@ -4,6 +4,7 @@ import html
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import RESULT_VISIBLE_MSG
+from db.manager import DatabaseManager
 
 
 def create_inline_menu(buttons):
@@ -18,6 +19,8 @@ def get_admin_buttons(poll):
 
     if poll.is_unpublished:
         buttons.append([{'text': 'Poll settings', 'callback_data': 'settings_{}'.format(poll.id)}])
+    else:
+        buttons.append([{'text': 'Update results', 'callback_data': 'update_{}'.format(poll.id)}])
 
     buttons.append([
         {'text': 'Close', 'callback_data': 'close_{}'.format(poll.id)},
@@ -73,7 +76,12 @@ def poll_settings_buttons(poll):
     ])
 
 
-def get_buttons_by_action(action):
+def get_buttons_by_action(user, poll, action):
+    user_can_vote = DatabaseManager.user_can_vote(user, poll)
+
+    if action == 'answer' and not user_can_vote:
+        return None
+
     poll_buttons = {
         'admin': get_admin_buttons,
         'answer': get_answers_buttons,

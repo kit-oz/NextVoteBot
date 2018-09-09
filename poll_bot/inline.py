@@ -63,6 +63,7 @@ def inline_query(bot, update, user):
 
     bot.answer_inline_query(update.inline_query.id,
                             results,
+                            cache_time=60,
                             is_personal=True,
                             switch_pm_text=MESSAGES['CREATE_NEW_POLL'],
                             switch_pm_parameter='1')

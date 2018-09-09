@@ -188,6 +188,12 @@ class DatabaseManager:
         return user
 
     @staticmethod
+    def user_can_vote(user, poll):
+        user_choice = DatabaseManager.get_user_choice(user=user, poll=poll)
+
+        return poll.can_change_answer or user_choice is None
+
+    @staticmethod
     def get_user_choice(user, poll):
         """Get user choice for current poll
 
@@ -227,12 +233,15 @@ class DatabaseManager:
         if with_closed:
             query = query.filter(Poll.state != Poll.DELETED)
         else:
-            query = query.filter(Poll.state == Poll.OPEN or Poll.state == Poll.UNPUBLISHED)
+            query = query.filter(or_(
+                Poll.state == Poll.OPEN,
+                Poll.state == Poll.UNPUBLISHED
+            ))
 
         if query_text:
             query = query.filter(or_(
                 Poll.question.ilike('%{}%'.format(query_text)),
-                Poll.id.like('{}'.format(query_text))
+                Poll.id == query_text
             ))
 
         query = query.paginate(page=page, per_page=per_page)

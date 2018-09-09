@@ -14,7 +14,7 @@ def get_chart(poll, user, action):
         'text': choice.text,
         'votes': choice.votes,
         'user_choice': choice.is_user_choice(user),
-        'likes': 0 if max_votes == 0 else round(len(choice.results) / max_votes) * 7,
+        'likes': 0 if max_votes == 0 else round(len(choice.results) / max_votes) * 12,
         'percent': 0 if poll.votes == 0 else 100 * len(choice.results) / poll.votes
     } for choice in poll.choices]
 
@@ -25,7 +25,8 @@ def get_chart(poll, user, action):
         state='&#9635;' if choice['user_choice'] else '&#9633;',
         text=choice['text'],
         votes=choice['votes'],
-        likes='&#9643;' if choice['likes'] == 0 else '&#128077;️' * choice['likes'],
+        likes='&#124;' if choice['likes'] == 0 else '&#9632;️' * choice['likes'],
+        # likes='&#9643;' if choice['likes'] == 0 else '&#128077;️' * choice['likes'],
         percent=choice['percent']
     ) for choice in choices]
 
@@ -49,6 +50,7 @@ def get_message_text(poll, user, action='answer'):
     poll_title = '<b>{}</b>'.format(poll.question)
     chart = get_chart(poll, user, action)
     total_votes = get_total_votes(poll)
+    user_can_vote = DatabaseManager.user_can_vote(user, poll)
 
     message_text.append(poll_title)
     message_text.append(chart)
@@ -60,5 +62,7 @@ def get_message_text(poll, user, action='answer'):
         message_text.append(MESSAGES['PUBLICATION_WARNING'])
     elif poll.is_closed or poll.is_deleted:
         message_text.append(MESSAGES['POLL_FOOTER_CLOSED'])
+    elif action == 'answer' and not poll.can_change_answer and user_can_vote:
+        message_text.append(MESSAGES['CANT_CHANGE_ANSWER'])
 
     return '\n\n'.join(message_text)
